@@ -9,7 +9,7 @@ import {
   FlatList,
 } from 'react-native'
 import * as Location from 'expo-location'
-import { useFocusEffect } from 'expo-router'
+import { useFocusEffect, router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 
 type Contacto = {
@@ -88,28 +88,9 @@ export default function SOS() {
     setEnviando(false)
   }
 
-  async function agregarContacto() {
-    Alert.prompt(
-      'Agregar contacto',
-      'Nombre del contacto',
-      async (nombre) => {
-        if (!nombre) return
-        Alert.prompt('Teléfono', 'Número de teléfono', async (telefono) => {
-          if (!telefono) return
-          const { data: { user } } = await supabase.auth.getUser()
-          if (!user) return
-
-          const { error } = await supabase.from('contactos_sos').insert({
-            usuario_id: user.id,
-            nombre,
-            telefono,
-          })
-
-          if (!error) cargarContactos()
-        })
-      }
-    )
-  }
+  function agregarContacto() {
+  router.push('/agregar-contacto-sos')
+}
 
   return (
     <View style={styles.container}>
