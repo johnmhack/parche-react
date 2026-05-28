@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "parche2",
-    "slug": "parche2",
+    "slug": "parche",
     "scheme": "parche",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -26,6 +26,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "99235be3-fc0e-44a8-94bc-f9acc7eb5c34"
+      }
+    },
+    "owner": "johnmhacks-organization"
   }
 }
