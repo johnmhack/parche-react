@@ -18,6 +18,7 @@ type Perfil = {
   tuercas_acumuladas: number
   nivel: number
   plan: string
+  rol: string
 }
 
 export default function Perfil() {
@@ -98,7 +99,11 @@ export default function Perfil() {
           <Text style={styles.infoValor}>{perfil?.ciudad}</Text>
         </View>
       </View>
-
+      {perfil?.rol === 'admin' && (
+  <TouchableOpacity style={styles.botonAdmin} onPress={() => router.push('/admin')}>
+    <Text style={styles.botonAdminTexto}>⚙️ Panel Admin</Text>
+  </TouchableOpacity>
+)}  
       <TouchableOpacity style={styles.botonLogout} onPress={handleLogout}>
         <Text style={styles.botonLogoutTexto}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -219,4 +224,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  botonAdmin: {
+  width: '100%',
+  backgroundColor: '#f97316',
+  borderRadius: 12,
+  padding: 16,
+  alignItems: 'center',
+  marginBottom: 12,
+},
+botonAdminTexto: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
 })
