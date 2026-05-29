@@ -66,13 +66,19 @@ export default function Garaje() {
           data={motos}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.tarjeta}>
-              <Text style={styles.placa}>{item.placa}</Text>
-              <Text style={styles.moto}>{item.marca} {item.modelo} {item.anio}</Text>
-              <Text style={styles.detalle}>{item.color} · {item.kilometraje_actual} km</Text>
-            </View>
-          )}
-        />
+  <TouchableOpacity
+    style={styles.tarjeta}
+    onPress={() => router.push({ pathname: '/editar-moto', params: { motoId: item.id } })}
+  >
+    <View style={styles.tarjetaHeader}>
+      <Text style={styles.placa}>{item.placa}</Text>
+      <Text style={styles.editar}>Editar →</Text>
+    </View>
+    <Text style={styles.moto}>{item.marca} {item.modelo} {item.anio}</Text>
+    <Text style={styles.detalle}>{item.color} · {item.kilometraje_actual} km</Text>
+  </TouchableOpacity>
+)}
+/>
       )}
 
       <TouchableOpacity
@@ -127,6 +133,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
   },
+  tarjetaHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 4,
+},
+editar: {
+  color: '#f97316',
+  fontSize: 14,
+},
   vacio: {
     flex: 1,
     alignItems: 'center',
