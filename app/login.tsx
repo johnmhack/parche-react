@@ -1,3 +1,4 @@
+import { registrarTokenPush } from '../lib/notificaciones'
 import { useState } from 'react'
 import {
   View,
@@ -10,6 +11,7 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { supabase } from '../lib/supabase'
+
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -29,6 +31,7 @@ export default function Login() {
     return
   }
   setCargando(false)
+  await registrarTokenPush()
   router.replace('/(tabs)/home')
 }
 
