@@ -91,7 +91,19 @@ export default function SOS() {
   function agregarContacto() {
   router.push('/agregar-contacto-sos')
 }
-
+async function eliminarContacto(id: string) {
+  Alert.alert('Eliminar contacto', '¿Estás seguro?', [
+    { text: 'Cancelar', style: 'cancel' },
+    {
+      text: 'Eliminar',
+      style: 'destructive',
+      onPress: async () => {
+        await supabase.from('contactos_sos').delete().eq('id', id)
+        cargarContactos()
+      }
+    }
+  ])
+}
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>🆘 SOS</Text>
