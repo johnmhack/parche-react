@@ -23,6 +23,7 @@ type Perfil = {
   nombre: string
   tuercas_acumuladas: number
   nivel: number
+  plan: string
 }
 
 type Anuncio = {
@@ -49,7 +50,7 @@ export default function Home() {
     if (!user) return
 
     const [{ data: perfilData }, { data: motosData }, { data: anunciosData }] = await Promise.all([
-      supabase.from('perfiles').select('nombre, tuercas_acumuladas, nivel').eq('id', user.id).single(),
+      supabase.from('perfiles').select('nombre, tuercas_acumuladas, nivel, plan').eq('id', user.id).single(),
       supabase.from('motos').select('id, placa, marca, modelo, soat_vencimiento, tecnicomecanica_vencimiento').eq('dueno_id', user.id).eq('activa', true),
       supabase.from('anuncios').select('id, titulo, mensaje, dirigido_a').eq('activo', true),
     ])

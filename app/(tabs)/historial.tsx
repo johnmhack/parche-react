@@ -133,23 +133,30 @@ export default function Historial() {
           data={registros}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.tarjeta}>
-              <View style={styles.tarjetaHeader}>
-                <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
-                <View style={[styles.badge, { backgroundColor: item.verificado ? '#22c55e22' : '#88888822' }]}>
-                  <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#888' }]}>
-                    {item.verificado ? '✓ Verificado' : 'Propietario'}
-                  </Text>
-                </View>
-              </View>
-              {item.descripcion && <Text style={styles.descripcion}>{item.descripcion}</Text>}
-              <View style={styles.tarjetaFooter}>
-                <Text style={styles.fecha}>{new Date(item.fecha).toLocaleDateString('es-CO')}</Text>
-                {item.kilometraje && <Text style={styles.km}>{item.kilometraje} km</Text>}
-                {item.costo && <Text style={styles.costo}>${item.costo.toLocaleString('es-CO')}</Text>}
-              </View>
-            </View>
-          )}
+  <TouchableOpacity
+    style={styles.tarjeta}
+    onPress={() => {
+      if (!item.verificado) {
+        router.push({ pathname: '/editar-historial', params: { registroId: item.id } })
+      }
+    }}
+  >
+    <View style={styles.tarjetaHeader}>
+      <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
+      <View style={[styles.badge, { backgroundColor: item.verificado ? '#22c55e22' : '#88888822' }]}>
+        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#888' }]}>
+          {item.verificado ? '✓ Verificado' : 'Editar →'}
+        </Text>
+      </View>
+    </View>
+    {item.descripcion && <Text style={styles.descripcion}>{item.descripcion}</Text>}
+    <View style={styles.tarjetaFooter}>
+      <Text style={styles.fecha}>{new Date(item.fecha).toLocaleDateString('es-CO')}</Text>
+      {item.kilometraje && <Text style={styles.km}>{item.kilometraje} km</Text>}
+      {item.costo && <Text style={styles.costo}>${item.costo.toLocaleString('es-CO')}</Text>}
+    </View>
+  </TouchableOpacity>
+)}
         />
       )}
 
