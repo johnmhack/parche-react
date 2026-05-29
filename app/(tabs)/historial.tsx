@@ -142,13 +142,18 @@ export default function Historial() {
     }}
   >
     <View style={styles.tarjetaHeader}>
-      <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
-      <View style={[styles.badge, { backgroundColor: item.verificado ? '#22c55e22' : '#88888822' }]}>
-        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#888' }]}>
-          {item.verificado ? '✓ Verificado' : 'Editar →'}
-        </Text>
-      </View>
+  <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
+  <View style={{ alignItems: 'flex-end' }}>
+    {!item.verificado && (
+      <Text style={{ color: '#888', fontSize: 11, marginBottom: 2 }}>Propietario</Text>
+    )}
+    <View style={[styles.badge, { backgroundColor: item.verificado ? '#22c55e22' : '#f9731622' }]}>
+      <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#f97316' }]}>
+        {item.verificado ? '✓ Verificado' : 'Editar →'}
+      </Text>
     </View>
+  </View>
+</View>
     {item.descripcion && <Text style={styles.descripcion}>{item.descripcion}</Text>}
     <View style={styles.tarjetaFooter}>
       <Text style={styles.fecha}>{new Date(item.fecha).toLocaleDateString('es-CO')}</Text>
