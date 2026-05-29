@@ -25,9 +25,17 @@ type Perfil = {
   nivel: number
 }
 
+type Anuncio = {
+  id: string
+  titulo: string
+  mensaje: string
+  dirigido_a: string
+}
+
 export default function Home() {
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [motos, setMotos] = useState<Moto[]>([])
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([])
   const [cargando, setCargando] = useState(true)
 
   useFocusEffect(
@@ -40,13 +48,20 @@ export default function Home() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [{ data: perfilData }, { data: motosData }] = await Promise.all([
+    const [{ data: perfilData }, { data: motosData }, { data: anunciosData }] = await Promise.all([
       supabase.from('perfiles').select('nombre, tuercas_acumuladas, nivel').eq('id', user.id).single(),
       supabase.from('motos').select('id, placa, marca, modelo, soat_vencimiento, tecnicomecanica_vencimiento').eq('dueno_id', user.id).eq('activa', true),
+      supabase.from('anuncios').select('id, titulo, mensaje, dirigido_a').eq('activo', true),
     ])
 
     if (perfilData) setPerfil(perfilData)
     if (motosData) setMotos(motosData)
+    if (anunciosData) {
+      const filtrados = anunciosData.filter(a => 
+        a.dirigido_a === 'todos' || a.dirigido_a === (perfilData?.plan || 'free')
+      )
+      setAnuncios(filtrados)
+    }
     setCargando(false)
   }
 
@@ -125,7 +140,17 @@ export default function Home() {
           </TouchableOpacity>
         </View>
       </View>
-
+      {anuncios.length > 0 && (
+        <View style={styles.seccion}>
+          <Text style={styles.seccionTitulo}>📢 Novedades</Text>
+          {anuncios.map((anuncio) => (
+            <View key={anuncio.id} style={styles.anuncioTarjeta}>
+              <Text style={styles.anuncioTitulo}>{anuncio.titulo}</Text>
+              <Text style={styles.anuncioMensaje}>{anuncio.mensaje}</Text>
+            </View>
+          ))}
+        </View>
+      )}      
     </ScrollView>
   )
 }
@@ -235,4 +260,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  anuncioTarjeta: {
+  backgroundColor: '#1a1a2e',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 8,
+  borderWidth: 1,
+  borderColor: '#f97316',
+},
+anuncioTitulo: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: '#f97316',
+  marginBottom: 4,
+},
+anuncioMensaje: {
+  fontSize: 14,
+  color: '#aaa',
+},
 })
