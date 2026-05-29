@@ -131,10 +131,13 @@ export default function SOS() {
                     {item.nombre.charAt(0).toUpperCase()}
                   </Text>
                 </View>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.contactoNombre}>{item.nombre}</Text>
                   <Text style={styles.contactoTelefono}>{item.telefono}</Text>
                 </View>
+                <TouchableOpacity onPress={() => eliminarContacto(item.id)}>
+                  <Text style={{ color: '#ff4444', fontSize: 14, fontWeight: 'bold' }}>Eliminar</Text>
+                </TouchableOpacity>
               </View>
             )}
           />
