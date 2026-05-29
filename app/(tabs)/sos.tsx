@@ -11,6 +11,8 @@ import {
 import * as Location from 'expo-location'
 import { useFocusEffect, router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
+import { useRef } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 type Contacto = {
   id: string
@@ -22,12 +24,42 @@ export default function SOS() {
   const [contactos, setContactos] = useState<Contacto[]>([])
   const [enviando, setEnviando] = useState(false)
   const [cargando, setCargando] = useState(true)
+  const [progreso, setProgreso] = useState(0)
+  const [enCooldown, setEnCooldown] = useState(false)
+  const [minutosRestantes, setMinutosRestantes] = useState(0)
+  const intervalRef = useRef<any>(null)
+  const progresoRef = useRef<any>(null)
 
   useFocusEffect(
     useCallback(() => {
       cargarContactos()
+      verificarCooldown()
     }, [])
   )
+  async function verificarCooldown() {
+  const ultimoSOS = await AsyncStorage.getItem('ultimo_sos')
+  if (!ultimoSOS) return
+  
+  const diff = Date.now() - parseInt(ultimoSOS)
+  const treintaMinutos = 30 * 60 * 1000
+  
+  if (diff < treintaMinutos) {
+    const restante = Math.ceil((treintaMinutos - diff) / 60000)
+    setEnCooldown(true)
+    setMinutosRestantes(restante)
+    
+    intervalRef.current = setInterval(async () => {
+      const diff2 = Date.now() - parseInt(ultimoSOS)
+      if (diff2 >= treintaMinutos) {
+        setEnCooldown(false)
+        setMinutosRestantes(0)
+        clearInterval(intervalRef.current)
+      } else {
+        setMinutosRestantes(Math.ceil((treintaMinutos - diff2) / 60000))
+      }
+    }, 60000)
+  }
+}
 
   async function cargarContactos() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -43,50 +75,45 @@ export default function SOS() {
   }
 
   async function handleSOS() {
-    if (contactos.length === 0) {
-      Alert.alert('Sin contactos', 'Agrega contactos de emergencia primero')
-      return
-    }
-
-    Alert.alert(
-      '🆘 Activar SOS',
-      '¿Confirmas que necesitas ayuda? Se enviará tu ubicación a tus contactos.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'SÍ, NECESITO AYUDA', style: 'destructive', onPress: enviarSOS },
-      ]
-    )
+  if (contactos.length === 0) {
+    Alert.alert('Sin contactos', 'Agrega contactos de emergencia primero')
+    return
   }
+  await enviarSOS()
+}
 
   async function enviarSOS() {
-    setEnviando(true)
+  setEnviando(true)
+  await AsyncStorage.setItem('ultimo_sos', Date.now().toString())
+  setEnCooldown(true)
+  setMinutosRestantes(30)
 
-    const { status } = await Location.requestForegroundPermissionsAsync()
-    if (status !== 'granted') {
-      Alert.alert('Error', 'Necesitamos acceso a tu ubicación')
-      setEnviando(false)
-      return
-    }
-
-    const location = await Location.getCurrentPositionAsync({})
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { error } = await supabase.from('mensajes_sos').insert({
-      usuario_id: user.id,
-      latitud: location.coords.latitude,
-      longitud: location.coords.longitude,
-      mensaje: '¡Necesito ayuda! Esta es mi ubicación.',
-    })
-
-    if (error) {
-      Alert.alert('Error', error.message)
-    } else {
-      Alert.alert('✅ SOS Enviado', 'Tu ubicación fue enviada a tus contactos de emergencia.')
-    }
-
+  const { status } = await Location.requestForegroundPermissionsAsync()
+  if (status !== 'granted') {
+    Alert.alert('Error', 'Necesitamos acceso a tu ubicación')
     setEnviando(false)
+    return
   }
+
+  const location = await Location.getCurrentPositionAsync({})
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { error } = await supabase.from('mensajes_sos').insert({
+    usuario_id: user.id,
+    latitud: location.coords.latitude,
+    longitud: location.coords.longitude,
+    mensaje: '¡Necesito ayuda! Esta es mi ubicación.',
+  })
+
+  if (error) {
+    Alert.alert('Error', error.message)
+  } else {
+    Alert.alert('✅ SOS Enviado', 'Tu ubicación fue enviada a tus contactos de emergencia.')
+  }
+
+  setEnviando(false)
+}
 
   function agregarContacto() {
   router.push('/agregar-contacto-sos')
@@ -110,15 +137,28 @@ async function eliminarContacto(id: string) {
       <Text style={styles.subtitulo}>Emergencias en ruta</Text>
 
       <TouchableOpacity
-        style={[styles.botonSOS, enviando && styles.botonSOSDesactivado]}
-        onPress={handleSOS}
-        disabled={enviando}
-      >
-        {enviando
-          ? <ActivityIndicator color="#fff" size="large" />
-          : <Text style={styles.botonSOSTexto}>PEDIR AYUDA</Text>
-        }
-      </TouchableOpacity>
+  style={[
+    styles.botonSOS,
+    (enviando || enCooldown) && styles.botonSOSDesactivado
+  ]}
+  onLongPress={enCooldown ? undefined : handleSOS}
+  delayLongPress={3000}
+  disabled={enviando || enCooldown}
+>
+  {enviando ? (
+    <ActivityIndicator color="#fff" size="large" />
+  ) : enCooldown ? (
+    <>
+      <Text style={styles.botonSOSTexto}>🔒</Text>
+      <Text style={styles.botonSOSSubtexto}>{minutosRestantes} min</Text>
+    </>
+  ) : (
+    <>
+      <Text style={styles.botonSOSTexto}>PEDIR AYUDA</Text>
+      <Text style={styles.botonSOSSubtexto}>Mantén 3 segundos</Text>
+    </>
+  )}
+</TouchableOpacity>
 
       <View style={styles.seccion}>
         <View style={styles.seccionHeader}>
@@ -259,4 +299,9 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 14,
   },
+  botonSOSSubtexto: {
+  color: '#ffaaaa',
+  fontSize: 12,
+  marginTop: 4,
+},
 })
