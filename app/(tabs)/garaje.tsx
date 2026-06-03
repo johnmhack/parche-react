@@ -23,6 +23,7 @@ type Moto = {
 
 export default function Garaje() {
   const [motos, setMotos] = useState<Moto[]>([])
+  const [plan, setPlan] = useState('free')
   const [cargando, setCargando] = useState(true)
 
   useFocusEffect(
@@ -34,6 +35,14 @@ export default function Garaje() {
   async function cargarMotos() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+
+    const { data: perfilData } = await supabase
+      .from('perfiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+
+    if (perfilData) setPlan(perfilData.plan)
 
     const { data, error } = await supabase
       .from('motos')
@@ -55,6 +64,9 @@ export default function Garaje() {
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>🏍️ Mi Garaje</Text>
+      <Text style={styles.limite}>
+        {motos.length} / {plan === 'premium' ? 4 : 2} motos · Plan {plan === 'premium' ? '⚡ Premium' : '🆓 Free'}
+      </Text>
 
       {motos.length === 0 ? (
         <View style={styles.vacio}>
@@ -169,4 +181,10 @@ editar: {
     fontSize: 16,
     fontWeight: 'bold',
   },
+  limite: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 20,
+    marginTop: -16,
+},
 })

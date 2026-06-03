@@ -23,35 +23,62 @@ export default function AgregarMoto() {
   const [cargando, setCargando] = useState(false)
 
   async function handleAgregar() {
-    if (!placa || !marca || !modelo || !anio) {
-      Alert.alert('Error', 'Placa, marca, modelo y año son obligatorios')
-      return
-    }
-
-    setCargando(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { error } = await supabase.from('motos').insert({
-      dueno_id: user.id,
-      placa: placa.toUpperCase(),
-      marca,
-      modelo,
-      anio: parseInt(anio),
-      cilindraje: cilindraje ? parseInt(cilindraje) : null,
-      color,
-      kilometraje_actual: kilometraje ? parseInt(kilometraje) : 0,
-    })
-
-    if (error) {
-      Alert.alert('Error', error.message)
-      setCargando(false)
-      return
-    }
-
-    Alert.alert('¡Listo!', 'Moto agregada al garaje')
-    router.back()
+  if (!placa || !marca || !modelo || !anio) {
+    Alert.alert('Error', 'Placa, marca, modelo y año son obligatorios')
+    return
   }
+
+  setCargando(true)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  // Verificar plan y cantidad de motos
+  const { data: perfil } = await supabase
+    .from('perfiles')
+    .select('plan')
+    .eq('id', user.id)
+    .single()
+
+  const { count } = await supabase
+    .from('motos')
+    .select('*', { count: 'exact', head: true })
+    .eq('dueno_id', user.id)
+    .eq('activa', true)
+
+  const limite = perfil?.plan === 'premium' ? 4 : 2
+
+  if ((count || 0) >= limite) {
+    Alert.alert(
+      perfil?.plan === 'premium' ? 'Límite alcanzado' : '¡Actualiza a Premium!',
+      perfil?.plan === 'premium'
+        ? 'Ya tienes 4 motos registradas, ese es el límite del plan Premium.'
+        : `El plan gratuito permite hasta 2 motos. Actualiza a Premium para registrar hasta 4.`,
+      [{ text: 'Entendido' }]
+    )
+    setCargando(false)
+    return
+  }
+
+  const { error } = await supabase.from('motos').insert({
+    dueno_id: user.id,
+    placa: placa.toUpperCase(),
+    marca,
+    modelo,
+    anio: parseInt(anio),
+    cilindraje: cilindraje ? parseInt(cilindraje) : null,
+    color,
+    kilometraje_actual: kilometraje ? parseInt(kilometraje) : 0,
+  })
+
+  if (error) {
+    Alert.alert('Error', error.message)
+    setCargando(false)
+    return
+  }
+
+  Alert.alert('¡Listo!', 'Moto agregada al garaje')
+  router.back()
+}
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
