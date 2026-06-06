@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 
 type Moto = {
@@ -29,6 +30,204 @@ type Registro = {
   verificado: boolean
   taller_id: string | null
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#080A0F',
+  },
+  ambientTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    zIndex: 0,
+  },
+  centered: {
+    flex: 1,
+    backgroundColor: '#080A0F',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 12,
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    marginBottom: 16,
+  },
+  tituloCyan: {
+    color: '#00E5FF',
+  },
+  // Chips selector
+  selectorWrap: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  motoChip: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  motoChipActivo: {
+    backgroundColor: 'rgba(255,107,26,0.15)',
+    borderColor: 'rgba(255,107,26,0.5)',
+  },
+  motoChipTexto: {
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 1,
+  },
+  motoChipTextoActivo: {
+    color: '#FF6B1A',
+  },
+  // Lista
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  // Tarjeta registro
+  tarjeta: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+  },
+  tarjetaGradient: {
+    padding: 16,
+  },
+  tarjetaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  tipoServicio: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    flex: 1,
+    marginRight: 8,
+  },
+  badgeWrap: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  propietarioLabel: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  badge: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+  },
+  badgeVerificado: {
+    backgroundColor: 'rgba(34,197,94,0.08)',
+    borderColor: 'rgba(34,197,94,0.3)',
+  },
+  badgeEditar: {
+    backgroundColor: 'rgba(255,107,26,0.08)',
+    borderColor: 'rgba(255,107,26,0.3)',
+  },
+  badgeTexto: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  descripcion: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  tarjetaFooter: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  footerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  footerTexto: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  costoTexto: {
+    fontSize: 11,
+    color: '#FF6B1A',
+    fontWeight: '700',
+  },
+  // Vacío
+  vacioEmoji: {
+    fontSize: 44,
+  },
+  vacioTexto: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  vacioSub: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  // Boton vacío
+  boton: {
+    backgroundColor: 'rgba(255,107,26,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,26,0.4)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+  },
+  botonTexto: {
+    color: '#FF6B1A',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  // FAB
+  fabWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    paddingTop: 8,
+  },
+  fab: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  fabGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  fabTexto: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+})
 
 export default function Historial() {
   const [motos, setMotos] = useState<Moto[]>([])
@@ -94,6 +293,7 @@ export default function Historial() {
 
   if (motos.length === 0) return (
     <View style={styles.centered}>
+      <Text style={styles.vacioEmoji}>📋</Text>
       <Text style={styles.vacioTexto}>No tienes motos registradas</Text>
       <TouchableOpacity style={styles.boton} onPress={() => router.push('/agregar-moto')}>
         <Text style={styles.botonTexto}>Agregar moto</Text>
@@ -103,28 +303,46 @@ export default function Historial() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>📋 Historial</Text>
+      <LinearGradient
+        colors={['rgba(0,229,255,0.04)', 'transparent']}
+        style={styles.ambientTop}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        pointerEvents="none"
+      />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selector}>
-        {motos.map((moto) => (
-          <TouchableOpacity
-            key={moto.id}
-            style={[styles.motoChip, motoSeleccionada?.id === moto.id && styles.motoChipActivo]}
-            onPress={() => seleccionarMoto(moto)}
-          >
-            <Text style={[styles.motoChipTexto, motoSeleccionada?.id === moto.id && styles.motoChipTextoActivo]}>
-              {moto.placa}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.titulo}>
+          <Text style={styles.tituloCyan}>Historial</Text> 📋
+        </Text>
+      </View>
 
+      {/* Chips selector motos */}
+      <View style={styles.selectorWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {motos.map((moto) => (
+            <TouchableOpacity
+              key={moto.id}
+              style={[styles.motoChip, motoSeleccionada?.id === moto.id && styles.motoChipActivo]}
+              onPress={() => seleccionarMoto(moto)}
+            >
+              <Text style={[styles.motoChipTexto, motoSeleccionada?.id === moto.id && styles.motoChipTextoActivo]}>
+                {moto.placa}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Lista registros */}
       {cargandoRegistros ? (
         <View style={styles.centered}>
           <ActivityIndicator color="#f97316" />
         </View>
       ) : registros.length === 0 ? (
-        <View style={styles.vacio}>
+        <View style={styles.centered}>
+          <Text style={styles.vacioEmoji}>🔧</Text>
           <Text style={styles.vacioTexto}>Sin registros aún</Text>
           <Text style={styles.vacioSub}>Agrega el primer servicio</Text>
         </View>
@@ -132,177 +350,82 @@ export default function Historial() {
         <FlatList
           data={registros}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-  <TouchableOpacity
-    style={styles.tarjeta}
-    onPress={() => {
-      if (!item.verificado) {
-        router.push({ pathname: '/editar-historial', params: { registroId: item.id } })
-      }
-    }}
-  >
-    <View style={styles.tarjetaHeader}>
-  <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
-  <View style={{ alignItems: 'flex-end' }}>
-    {!item.verificado && (
-      <Text style={{ color: '#888', fontSize: 11, marginBottom: 2 }}>Propietario</Text>
-    )}
-    <View style={[styles.badge, { backgroundColor: item.verificado ? '#22c55e22' : '#f9731622' }]}>
-      <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#f97316' }]}>
-        {item.verificado ? '✓ Verificado' : 'Editar →'}
-      </Text>
-    </View>
-  </View>
-</View>
-    {item.descripcion && <Text style={styles.descripcion}>{item.descripcion}</Text>}
-    <View style={styles.tarjetaFooter}>
-      <Text style={styles.fecha}>{new Date(item.fecha).toLocaleDateString('es-CO')}</Text>
-      {item.kilometraje && <Text style={styles.km}>{item.kilometraje} km</Text>}
-      {item.costo && <Text style={styles.costo}>${item.costo.toLocaleString('es-CO')}</Text>}
-    </View>
-  </TouchableOpacity>
-)}
+            <TouchableOpacity
+              onPress={() => {
+                if (!item.verificado) {
+                  router.push({ pathname: '/editar-historial', params: { registroId: item.id } })
+                }
+              }}
+            >
+              <View style={styles.tarjeta}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.02)']}
+                  style={styles.tarjetaGradient}
+                >
+                  <View style={styles.tarjetaHeader}>
+                    <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
+                    <View style={styles.badgeWrap}>
+                      {!item.verificado && (
+                        <Text style={styles.propietarioLabel}>Propietario</Text>
+                      )}
+                      <View style={[styles.badge, item.verificado ? styles.badgeVerificado : styles.badgeEditar]}>
+                        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#FF6B1A' }]}>
+                          {item.verificado ? '✓ Verificado' : 'Editar →'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {item.descripcion && (
+                    <Text style={styles.descripcion}>{item.descripcion}</Text>
+                  )}
+
+                  <View style={styles.tarjetaFooter}>
+                    <View style={styles.footerBadge}>
+                      <Text>📅</Text>
+                      <Text style={styles.footerTexto}>
+                        {new Date(item.fecha).toLocaleDateString('es-CO')}
+                      </Text>
+                    </View>
+                    {item.kilometraje && (
+                      <View style={styles.footerBadge}>
+                        <Text>📍</Text>
+                        <Text style={styles.footerTexto}>{item.kilometraje} km</Text>
+                      </View>
+                    )}
+                    {item.costo && (
+                      <View style={styles.footerBadge}>
+                        <Text>💰</Text>
+                        <Text style={styles.costoTexto}>${item.costo.toLocaleString('es-CO')}</Text>
+                      </View>
+                    )}
+                  </View>
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          )}
         />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push({ pathname: '/agregar-historial', params: { motoId: motoSeleccionada?.id, placa: motoSeleccionada?.placa } })}
-      >
-        <Text style={styles.fabTexto}>+ Agregar registro</Text>
-      </TouchableOpacity>
+      {/* FAB */}
+      <View style={styles.fabWrap}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push({ pathname: '/agregar-historial', params: { motoId: motoSeleccionada?.id, placa: motoSeleccionada?.placa } })}
+        >
+          <LinearGradient
+            colors={['#FF6B1A', '#e55a00']}
+            style={styles.fabGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.fabTexto}>+ Agregar registro</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-    padding: 24,
-    paddingTop: 60,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  titulo: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
-  },
-  selector: {
-    marginBottom: 16,
-    flexGrow: 0,
-  },
-  motoChip: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  motoChipActivo: {
-    backgroundColor: '#f97316',
-    borderColor: '#f97316',
-  },
-  motoChipTexto: {
-    color: '#888',
-    fontWeight: 'bold',
-  },
-  motoChipTextoActivo: {
-    color: '#fff',
-  },
-  tarjeta: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  tarjetaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  tipoServicio: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  badge: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  badgeTexto: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  descripcion: {
-    fontSize: 14,
-    color: '#aaa',
-    marginBottom: 8,
-  },
-  tarjetaFooter: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  fecha: {
-    fontSize: 12,
-    color: '#888',
-  },
-  km: {
-    fontSize: 12,
-    color: '#888',
-  },
-  costo: {
-    fontSize: 12,
-    color: '#f97316',
-    fontWeight: 'bold',
-  },
-  vacio: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vacioTexto: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 8,
-  },
-  vacioSub: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 24,
-  },
-  boton: {
-    backgroundColor: '#f97316',
-    borderRadius: 12,
-    padding: 16,
-    paddingHorizontal: 32,
-  },
-  botonTexto: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  fab: {
-    backgroundColor: '#f97316',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  fabTexto: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-})

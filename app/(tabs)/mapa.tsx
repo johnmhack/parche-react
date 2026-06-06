@@ -5,11 +5,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
 } from 'react-native'
 import MapView, { Marker, Callout } from 'react-native-maps'
 import * as Location from 'expo-location'
 import { useFocusEffect } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 
 type Taller = {
@@ -27,6 +27,96 @@ type Ubicacion = {
   latitud: number
   longitud: number
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#080A0F',
+  },
+  centered: {
+    flex: 1,
+    backgroundColor: '#080A0F',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
+    zIndex: 1,
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+    zIndex: 1,
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  tituloVerde: {
+    color: '#00E676',
+  },
+  subtitulo: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 4,
+  },
+  mapa: {
+    flex: 1,
+  },
+  // Callout
+  callout: {
+    width: 200,
+    padding: 10,
+    borderRadius: 8,
+  },
+  calloutNombre: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 4,
+  },
+  calloutDireccion: {
+    fontSize: 12,
+    color: '#555',
+    marginBottom: 4,
+  },
+  calloutCalificacion: {
+    fontSize: 12,
+    color: '#f97316',
+    fontWeight: '600',
+  },
+  calloutTelefono: {
+    fontSize: 12,
+    color: '#555',
+    marginTop: 2,
+  },
+  // Sin talleres
+  sinTalleres: {
+    position: 'absolute',
+    bottom: 24,
+    left: 20,
+    right: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  sinTalleresGradient: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  sinTalleresTexto: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 14,
+  },
+})
 
 export default function Mapa() {
   const [talleres, setTalleres] = useState<Taller[]>([])
@@ -69,8 +159,17 @@ export default function Mapa() {
 
   return (
     <View style={styles.container}>
+
+      {/* Header flotante sobre el mapa */}
+      <LinearGradient
+        colors={['#080A0F', 'rgba(8,10,15,0.85)', 'transparent']}
+        style={styles.headerGradient}
+        pointerEvents="none"
+      />
       <View style={styles.header}>
-        <Text style={styles.titulo}>🗺️ Talleres</Text>
+        <Text style={styles.titulo}>
+          <Text style={styles.tituloVerde}>Talleres</Text> 🗺️
+        </Text>
         <Text style={styles.subtitulo}>{talleres.length} talleres disponibles</Text>
       </View>
 
@@ -84,6 +183,7 @@ export default function Mapa() {
         }}
         showsUserLocation={ubicacion !== null}
         showsMyLocationButton={true}
+        userInterfaceStyle="dark"
       >
         {talleres.map((taller) => (
           <Marker
@@ -92,7 +192,7 @@ export default function Mapa() {
               latitude: taller.latitud,
               longitude: taller.longitud,
             }}
-            pinColor="#f97316"
+            pinColor="#00E676"
           >
             <Callout>
               <View style={styles.callout}>
@@ -112,78 +212,14 @@ export default function Mapa() {
 
       {talleres.length === 0 && (
         <View style={styles.sinTalleres}>
-          <Text style={styles.sinTalleresTexto}>No hay talleres registrados aún</Text>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+            style={styles.sinTalleresGradient}
+          >
+            <Text style={styles.sinTalleresTexto}>No hay talleres registrados aún</Text>
+          </LinearGradient>
         </View>
       )}
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    padding: 24,
-    paddingTop: 60,
-    paddingBottom: 16,
-  },
-  titulo: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  subtitulo: {
-    fontSize: 14,
-    color: '#888',
-    marginTop: 4,
-  },
-  mapa: {
-    flex: 1,
-  },
-  callout: {
-    width: 200,
-    padding: 8,
-  },
-  calloutNombre: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
-  },
-  calloutDireccion: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  calloutCalificacion: {
-    fontSize: 12,
-    color: '#f97316',
-  },
-  calloutTelefono: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  sinTalleres: {
-    position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  sinTalleresTexto: {
-    color: '#888',
-    fontSize: 14,
-  },
-})

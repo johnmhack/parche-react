@@ -32,6 +32,9 @@
         "projectId": "99235be3-fc0e-44a8-94bc-f9acc7eb5c34"
       }
     },
-    "owner": "johnmhacks-organization"
+    "owner": "johnmhacks-organization",
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
