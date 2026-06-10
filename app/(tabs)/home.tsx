@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  Image,
 } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -33,6 +35,7 @@ type Anuncio = {
   titulo: string
   mensaje: string
   dirigido_a: string
+  imagen_url: string | null
 }
 
 const styles = StyleSheet.create({
@@ -292,6 +295,58 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     lineHeight: 19,
   },
+  // Banner modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  bannerCard: {
+    width: '100%',
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  bannerImagen: {
+    width: '100%',
+    aspectRatio: 0.65,
+  },
+  bannerFooter: {
+    padding: 16,
+  },
+  bannerTitulo: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  bannerMensaje: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 19,
+  },
+  bannerCerrar: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 10,
+  },
+  bannerCerrarTexto: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 })
 
 export default function Home() {
@@ -299,6 +354,8 @@ export default function Home() {
   const [motos, setMotos] = useState<Moto[]>([])
   const [anuncios, setAnuncios] = useState<Anuncio[]>([])
   const [cargando, setCargando] = useState(true)
+  const [bannerVisible, setBannerVisible] = useState(false)
+  const [bannerAnuncio, setBannerAnuncio] = useState<Anuncio | null>(null)
 
   useFocusEffect(
     useCallback(() => {
@@ -313,7 +370,7 @@ export default function Home() {
     const [{ data: perfilData }, { data: motosData }, { data: anunciosData }] = await Promise.all([
       supabase.from('perfiles').select('nombre, tuercas_acumuladas, nivel, plan').eq('id', user.id).single(),
       supabase.from('motos').select('id, placa, marca, modelo, soat_vencimiento, tecnicomecanica_vencimiento').eq('dueno_id', user.id).eq('activa', true),
-      supabase.from('anuncios').select('id, titulo, mensaje, dirigido_a').eq('activo', true),
+      supabase.from('anuncios').select('id, titulo, mensaje, dirigido_a, imagen_url').eq('activo', true),
     ])
 
     if (perfilData) setPerfil(perfilData)
@@ -323,7 +380,12 @@ export default function Home() {
         a.dirigido_a === 'todos' || a.dirigido_a === (perfilData?.plan || 'free')
       )
       setAnuncios(filtrados)
-    }
+      const conImagen = filtrados.find(a => a.imagen_url)
+      if (conImagen) {
+       setBannerAnuncio(conImagen)
+        setBannerVisible(true)
+      }
+    }  
     setCargando(false)
   }
 
@@ -350,6 +412,35 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
+      {/* Banner Modal */}
+    <Modal visible={bannerVisible} transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.bannerCard}>
+          <LinearGradient
+            colors={[colors.card, colors.bg]}
+            style={{ borderRadius: 24 }}
+          >
+            {bannerAnuncio?.imagen_url && (
+              <Image
+                source={{ uri: bannerAnuncio.imagen_url }}
+                style={styles.bannerImagen}
+                resizeMode="cover"
+              />
+            )}
+            <View style={styles.bannerFooter}>
+              <Text style={styles.bannerTitulo}>{bannerAnuncio?.titulo}</Text>
+              <Text style={styles.bannerMensaje}>{bannerAnuncio?.mensaje}</Text>
+            </View>
+          </LinearGradient>
+          <TouchableOpacity
+            style={styles.bannerCerrar}
+            onPress={() => setBannerVisible(false)}
+          >
+            <Text style={styles.bannerCerrarTexto}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
       <LinearGradient
         colors={['rgba(255,107,26,0.06)', 'transparent']}
         style={styles.ambientTop}
