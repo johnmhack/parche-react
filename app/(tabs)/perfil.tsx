@@ -11,6 +11,7 @@ import {
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { colors } from '../../lib/colors'
 
 type Perfil = {
   nombre: string
@@ -26,7 +27,7 @@ type Perfil = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   ambientTop: {
     position: 'absolute',
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tituloNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   // Avatar
   avatarWrap: {
@@ -84,7 +85,7 @@ const styles = StyleSheet.create({
   avatarTexto: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   nombre: {
     fontSize: 22,
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   statNumero: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   statLabel: {
     fontSize: 11,
@@ -254,7 +255,7 @@ export default function Perfil() {
         {/* Avatar */}
         <View style={styles.avatarWrap}>
           <LinearGradient
-            colors={['#FF6B1A', '#e55a00']}
+            colors={[colors.primario, colors.primarioOscuro]}
             style={styles.avatarRing}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -322,7 +323,7 @@ export default function Perfil() {
         {perfil?.rol === 'admin' && (
           <TouchableOpacity style={styles.botonAdmin} onPress={() => router.push('/admin')}>
             <LinearGradient
-              colors={['#FF6B1A', '#e55a00']}
+              colors={[colors.primario, colors.primarioOscuro]}
               style={styles.botonAdminGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}

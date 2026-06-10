@@ -10,6 +10,7 @@ import {
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { colors } from '../../lib/colors'
 
 type Moto = {
   id: string
@@ -37,7 +38,7 @@ type Anuncio = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   ambientTop: {
     position: 'absolute',
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   saludoNombre: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   subtitulo: {
     fontSize: 12,
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   tuercasNumero: {
     fontWeight: '700',
     fontSize: 18,
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   motoCard: {
     borderRadius: 24,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
   motoCyan: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#00E5FF',
+    color: colors.secundario,
     lineHeight: 24,
   },
   motoModelo: {
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   anuncioTitulo: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FF6B1A',
+    color: colors.primario,
     marginBottom: 4,
   },
   anuncioMensaje: {
@@ -337,7 +338,7 @@ export default function Home() {
   function colorAlerta(dias: number | null) {
     if (dias === null) return '#888'
     if (dias <= 30) return '#ff4444'
-    if (dias <= 60) return '#f97316'
+    if (dias <= 60) return colors.primario
     return '#22c55e'
   }
 

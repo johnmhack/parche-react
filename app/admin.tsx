@@ -11,7 +11,10 @@ import {
   FlatList,
 } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+ import { SafeAreaView } from 'react-native-safe-area-context'
 
 type Anuncio = {
   id: string
@@ -21,6 +24,265 @@ type Anuncio = {
   activo: boolean
   created_at: string
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  content: {
+    padding: 20,
+    paddingTop: 60,
+  },
+  ambientTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    zIndex: 0,
+  },
+  centered: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  back: {
+    marginBottom: 24,
+    alignSelf: 'flex-start',
+  },
+  backTexto: {
+    color: colors.primario,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  tituloNaranja: {
+    color: colors.primario,
+  },
+  adminBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,107,26,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,26,0.3)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 28,
+    marginTop: 8,
+  },
+  adminBadgeTexto: {
+    color: colors.primario,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  // Sección
+  seccion: {
+    marginBottom: 28,
+  },
+  seccionTitulo: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 14,
+  },
+  // Card formulario
+  card: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 12,
+  },
+  cardGradient: {
+    padding: 18,
+  },
+  label: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    padding: 16,
+    color: '#fff',
+    fontSize: 15,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  inputMultiline: {
+    height: 90,
+    textAlignVertical: 'top',
+  },
+  // Chips
+  chipsWrap: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  chip: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  chipActivo: {
+    backgroundColor: 'rgba(255,107,26,0.15)',
+    borderColor: 'rgba(255,107,26,0.4)',
+  },
+  chipTexto: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  chipTextoActivo: {
+    color: colors.primario,
+    fontWeight: '700',
+  },
+  // Botones
+  botonPublicar: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  botonPublicarGradient: {
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  botonNotificacion: {
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,26,0.4)',
+    backgroundColor: 'rgba(255,107,26,0.08)',
+  },
+  botonTexto: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  botonTextoNaranja: {
+    color: colors.primario,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  // Tarjeta anuncio
+  tarjeta: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+  },
+  tarjetaGradient: {
+    padding: 16,
+  },
+  tarjetaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  tarjetaTitulo: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+    flex: 1,
+    marginRight: 8,
+  },
+  badge: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+  },
+  badgeActivo: {
+    backgroundColor: 'rgba(34,197,94,0.08)',
+    borderColor: 'rgba(34,197,94,0.3)',
+  },
+  badgeInactivo: {
+    backgroundColor: 'rgba(136,136,136,0.08)',
+    borderColor: 'rgba(136,136,136,0.2)',
+  },
+  badgeTexto: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  tarjetaMensaje: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  tarjetaDirigido: {
+    fontSize: 11,
+    color: colors.primario,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  tarjetaAcciones: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  accionBoton: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  accionEliminar: {
+    borderColor: 'rgba(255,68,68,0.3)',
+    backgroundColor: 'rgba(255,68,68,0.06)',
+  },
+  accionTexto: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  accionTextoEliminar: {
+    color: '#ff4444',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  vacio: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginBottom: 28,
+  },
+})
 
 export default function Admin() {
   const [rol, setRol] = useState<string | null>(null)
@@ -100,10 +362,7 @@ export default function Admin() {
   }
 
   async function handleToggleAnuncio(id: string, activo: boolean) {
-    await supabase
-      .from('anuncios')
-      .update({ activo: !activo })
-      .eq('id', id)
+    await supabase.from('anuncios').update({ activo: !activo }).eq('id', id)
     cargarAnuncios()
   }
 
@@ -177,178 +436,144 @@ export default function Admin() {
   )
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backTexto}>← Volver</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['rgba(255,107,26,0.05)', 'transparent']}
+        style={styles.ambientTop}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        pointerEvents="none"
+      />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-      <Text style={styles.titulo}>⚙️ Panel Admin</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+            <Text style={styles.backTexto}>← Volver</Text>
+          </TouchableOpacity>
 
-      <View style={styles.seccion}>
-        <Text style={styles.seccionTitulo}>Crear anuncio</Text>
+          <Text style={styles.titulo}>
+            Panel <Text style={styles.tituloNaranja}>Admin</Text> ⚙️
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Título *"
-          placeholderTextColor="#888"
-          value={titulo}
-          onChangeText={setTitulo}
-        />
+          <View style={styles.adminBadge}>
+            <Text style={styles.adminBadgeTexto}>🔐 Acceso restringido</Text>
+          </View>
 
-        <TextInput
-          style={[styles.input, styles.inputMultiline]}
-          placeholder="Mensaje *"
-          placeholderTextColor="#888"
-          value={mensaje}
-          onChangeText={setMensaje}
-          multiline
-          numberOfLines={3}
-        />
+          {/* Crear anuncio */}
+          <View style={styles.seccion}>
+            <Text style={styles.seccionTitulo}>Crear anuncio</Text>
+            <View style={styles.card}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+                style={styles.cardGradient}
+              >
+                <Text style={styles.label}>Título *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Título del anuncio"
+                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  value={titulo}
+                  onChangeText={setTitulo}
+                />
 
-        <Text style={styles.label}>Dirigido a:</Text>
-        <View style={styles.chips}>
-          {['todos', 'free', 'premium'].map((opcion) => (
-            <TouchableOpacity
-              key={opcion}
-              style={[styles.chip, dirigidoA === opcion && styles.chipActivo]}
-              onPress={() => setDirigidoA(opcion)}
-            >
-              <Text style={[styles.chipTexto, dirigidoA === opcion && styles.chipTextoActivo]}>
-                {opcion}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text style={styles.label}>Mensaje *</Text>
+                <TextInput
+                  style={[styles.input, styles.inputMultiline]}
+                  placeholder="Contenido del anuncio..."
+                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  value={mensaje}
+                  onChangeText={setMensaje}
+                  multiline
+                  numberOfLines={3}
+                />
 
-        <TouchableOpacity style={styles.boton} onPress={handleCrearAnuncio} disabled={guardando}>
-          {guardando
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.botonTexto}>Publicar anuncio</Text>
-          }
-        </TouchableOpacity>
+                <Text style={styles.label}>Dirigido a</Text>
+                <View style={styles.chipsWrap}>
+                  {['todos', 'free', 'premium'].map((opcion) => (
+                    <TouchableOpacity
+                      key={opcion}
+                      style={[styles.chip, dirigidoA === opcion && styles.chipActivo]}
+                      onPress={() => setDirigidoA(opcion)}
+                    >
+                      <Text style={[styles.chipTexto, dirigidoA === opcion && styles.chipTextoActivo]}>
+                        {opcion}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-        <TouchableOpacity style={styles.botonNotificacion} onPress={handleNotificacionMasiva} disabled={guardando}>
-          <Text style={styles.botonTexto}>📣 Enviar como notificación</Text>
-        </TouchableOpacity>
-      </View>
+                <TouchableOpacity style={styles.botonPublicar} onPress={handleCrearAnuncio} disabled={guardando}>
+                  <LinearGradient
+                    colors={[colors.primario, colors.primarioOscuro]}
+                    style={styles.botonPublicarGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {guardando
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={styles.botonTexto}>Publicar anuncio</Text>
+                    }
+                  </LinearGradient>
+                </TouchableOpacity>
 
-      <View style={styles.seccion}>
-        <Text style={styles.seccionTitulo}>Anuncios activos</Text>
-        {anuncios.length === 0 ? (
-          <Text style={styles.vacio}>No hay anuncios</Text>
-        ) : (
-          <FlatList
-            data={anuncios}
-            scrollEnabled={false}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.tarjeta}>
-                <View style={styles.tarjetaHeader}>
-                  <Text style={styles.tarjetaTitulo}>{item.titulo}</Text>
-                  <View style={[styles.badge, { backgroundColor: item.activo ? '#22c55e22' : '#88888822' }]}>
-                    <Text style={[styles.badgeTexto, { color: item.activo ? '#22c55e' : '#888' }]}>
-                      {item.activo ? 'Activo' : 'Inactivo'}
-                    </Text>
+                <TouchableOpacity style={styles.botonNotificacion} onPress={handleNotificacionMasiva} disabled={guardando}>
+                  <Text style={styles.botonTextoNaranja}>📣 Enviar como notificación</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Lista anuncios */}
+          <View style={styles.seccion}>
+            <Text style={styles.seccionTitulo}>Anuncios publicados</Text>
+            {anuncios.length === 0 ? (
+              <Text style={styles.vacio}>No hay anuncios</Text>
+            ) : (
+              <FlatList
+                data={anuncios}
+                scrollEnabled={false}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.tarjeta}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.02)']}
+                      style={styles.tarjetaGradient}
+                    >
+                      <View style={styles.tarjetaHeader}>
+                        <Text style={styles.tarjetaTitulo}>{item.titulo}</Text>
+                        <View style={[styles.badge, item.activo ? styles.badgeActivo : styles.badgeInactivo]}>
+                          <Text style={[styles.badgeTexto, { color: item.activo ? '#22c55e' : '#888' }]}>
+                            {item.activo ? 'Activo' : 'Inactivo'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.tarjetaMensaje}>{item.mensaje}</Text>
+                      <Text style={styles.tarjetaDirigido}>→ {item.dirigido_a.toUpperCase()}</Text>
+                      <View style={styles.tarjetaAcciones}>
+                        <TouchableOpacity
+                          style={styles.accionBoton}
+                          onPress={() => handleToggleAnuncio(item.id, item.activo)}
+                        >
+                          <Text style={styles.accionTexto}>{item.activo ? 'Desactivar' : 'Activar'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.accionBoton, styles.accionEliminar]}
+                          onPress={() => handleEliminarAnuncio(item.id)}
+                        >
+                          <Text style={styles.accionTextoEliminar}>Eliminar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </LinearGradient>
                   </View>
-                </View>
-                <Text style={styles.tarjetaMensaje}>{item.mensaje}</Text>
-                <Text style={styles.tarjetaDirigido}>→ {item.dirigido_a}</Text>
-                <View style={styles.tarjetaAcciones}>
-                  <TouchableOpacity
-                    style={styles.accionBoton}
-                    onPress={() => handleToggleAnuncio(item.id, item.activo)}
-                  >
-                    <Text style={styles.accionTexto}>{item.activo ? 'Desactivar' : 'Activar'}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.accionBoton, styles.accionEliminar]}
-                    onPress={() => handleEliminarAnuncio(item.id)}
-                  >
-                    <Text style={[styles.accionTexto, { color: '#ff4444' }]}>Eliminar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                )}
+              />
             )}
-          />
-        )}
-      </View>
-    </ScrollView>
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>  
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  content: { padding: 24, paddingTop: 60 },
-  centered: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  back: { marginBottom: 24 },
-  backTexto: { color: '#f97316', fontSize: 16 },
-  titulo: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 24 },
-  seccion: { marginBottom: 32 },
-  seccionTitulo: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
-  label: { fontSize: 14, color: '#888', marginBottom: 8 },
-  input: {
-    width: '100%',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  inputMultiline: { height: 100, textAlignVertical: 'top' },
-  chips: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  chip: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  chipActivo: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  chipTexto: { color: '#888', fontSize: 14 },
-  chipTextoActivo: { color: '#fff', fontWeight: 'bold' },
-  boton: {
-    backgroundColor: '#f97316',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  botonNotificacion: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#f97316',
-  },
-  botonTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  tarjeta: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  tarjetaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tarjetaTitulo: { fontSize: 16, fontWeight: 'bold', color: '#fff', flex: 1 },
-  tarjetaMensaje: { fontSize: 14, color: '#aaa', marginBottom: 8 },
-  tarjetaDirigido: { fontSize: 12, color: '#f97316', marginBottom: 12 },
-  tarjetaAcciones: { flexDirection: 'row', gap: 8 },
-  accionBoton: {
-    flex: 1,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 8,
-    padding: 8,
-    alignItems: 'center',
-  },
-  accionEliminar: { borderWidth: 1, borderColor: '#ff4444' },
-  accionTexto: { color: '#fff', fontSize: 14 },
-  badge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  badgeTexto: { fontSize: 12, fontWeight: 'bold' },
-  vacio: { color: '#888', fontSize: 14, textAlign: 'center' },
-})

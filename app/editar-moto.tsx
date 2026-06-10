@@ -15,17 +15,19 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     padding: 20,
     paddingTop: 60,
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -34,7 +36,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -46,7 +48,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tituloNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   label: {
     fontSize: 12,
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   modalConfirmar: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -308,213 +310,215 @@ export default function EditarMoto() {
   )
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}> 
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-      <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backTexto}>← Volver</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+          <Text style={styles.backTexto}>← Volver</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.titulo}>
-        Editar <Text style={styles.tituloNaranja}>Moto</Text>
-      </Text>
-
-      {/* Datos básicos */}
-      <Text style={styles.seccionLabel}>Datos básicos</Text>
-
-      <Text style={styles.label}>Placa *</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="ABC123"
-        value={placa}
-        onChangeText={setPlaca}
-        autoCapitalize="characters"
-      />
-
-      <Text style={styles.label}>Marca *</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="Honda, Yamaha..."
-        value={marca}
-        onChangeText={setMarca}
-      />
-
-      <Text style={styles.label}>Modelo *</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="CB190, FZ25..."
-        value={modelo}
-        onChangeText={setModelo}
-      />
-
-      <Text style={styles.label}>Año *</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="2022"
-        value={anio}
-        onChangeText={setAnio}
-        keyboardType="numeric"
-      />
-
-      <View style={styles.divider} />
-      <Text style={styles.seccionLabel}>Detalles</Text>
-
-      <Text style={styles.label}>Cilindraje (cc)</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="150"
-        value={cilindraje}
-        onChangeText={setCilindraje}
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Color</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="Rojo, Negro..."
-        value={color}
-        onChangeText={setColor}
-      />
-
-      <Text style={styles.label}>Kilometraje actual</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        placeholder="15000"
-        value={kilometraje}
-        onChangeText={setKilometraje}
-        keyboardType="numeric"
-      />
-
-      <View style={styles.divider} />
-      <Text style={styles.seccionLabel}>Documentos</Text>
-
-      {/* SOAT picker */}
-      <Text style={styles.label}>Vencimiento SOAT</Text>
-      <TouchableOpacity
-        style={[styles.dateBtn, soat && styles.dateBtnActivo]}
-        onPress={() => {
-          setTempDateSoat(soat ? fechaADate(soat) : new Date())
-          setMostrarPickerSoat(true)
-        }}
-      >
-        <Text style={[styles.dateBtnTexto, soat && styles.dateBtnTextoActivo]}>
-          {soat ? formatearFecha(soat) : 'Seleccionar fecha'}
+        <Text style={styles.titulo}>
+          Editar <Text style={styles.tituloNaranja}>Moto</Text>
         </Text>
-        <Text style={styles.dateBtnIcono}>📅</Text>
-      </TouchableOpacity>
 
-      {/* Tecno picker */}
-      <Text style={styles.label}>Vencimiento Tecnomecánica</Text>
-      <TouchableOpacity
-        style={[styles.dateBtn, tecno && styles.dateBtnActivo]}
-        onPress={() => {
-          setTempDateTecno(tecno ? fechaADate(tecno) : new Date())
-          setMostrarPickerTecno(true)
-        }}
-      >
-        <Text style={[styles.dateBtnTexto, tecno && styles.dateBtnTextoActivo]}>
-          {tecno ? formatearFecha(tecno) : 'Seleccionar fecha'}
-        </Text>
-        <Text style={styles.dateBtnIcono}>📅</Text>
-      </TouchableOpacity>
+        {/* Datos básicos */}
+        <Text style={styles.seccionLabel}>Datos básicos</Text>
 
-      {/* Botón guardar */}
-      <TouchableOpacity style={styles.botonGuardar} onPress={handleGuardar} disabled={guardando}>
-        <LinearGradient
-          colors={['#FF6B1A', '#e55a00']}
-          style={styles.botonGuardarGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+        <Text style={styles.label}>Placa *</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="ABC123"
+          value={placa}
+          onChangeText={setPlaca}
+          autoCapitalize="characters"
+        />
+
+        <Text style={styles.label}>Marca *</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="Honda, Yamaha..."
+          value={marca}
+          onChangeText={setMarca}
+        />
+
+        <Text style={styles.label}>Modelo *</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="CB190, FZ25..."
+          value={modelo}
+          onChangeText={setModelo}
+        />
+
+        <Text style={styles.label}>Año *</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="2022"
+          value={anio}
+          onChangeText={setAnio}
+          keyboardType="numeric"
+        />
+
+        <View style={styles.divider} />
+        <Text style={styles.seccionLabel}>Detalles</Text>
+
+        <Text style={styles.label}>Cilindraje (cc)</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="150"
+          value={cilindraje}
+          onChangeText={setCilindraje}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Color</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="Rojo, Negro..."
+          value={color}
+          onChangeText={setColor}
+        />
+
+        <Text style={styles.label}>Kilometraje actual</Text>
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          placeholder="15000"
+          value={kilometraje}
+          onChangeText={setKilometraje}
+          keyboardType="numeric"
+        />
+
+        <View style={styles.divider} />
+        <Text style={styles.seccionLabel}>Documentos</Text>
+
+        {/* SOAT picker */}
+        <Text style={styles.label}>Vencimiento SOAT</Text>
+        <TouchableOpacity
+          style={[styles.dateBtn, soat && styles.dateBtnActivo]}
+          onPress={() => {
+            setTempDateSoat(soat ? fechaADate(soat) : new Date())
+            setMostrarPickerSoat(true)
+          }}
         >
-          {guardando
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.botonTexto}>Guardar cambios</Text>
-          }
-        </LinearGradient>
-      </TouchableOpacity>
+          <Text style={[styles.dateBtnTexto, soat && styles.dateBtnTextoActivo]}>
+            {soat ? formatearFecha(soat) : 'Seleccionar fecha'}
+          </Text>
+          <Text style={styles.dateBtnIcono}>📅</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.botonEliminar} onPress={handleEliminar}>
-        <Text style={styles.botonEliminarTexto}>Eliminar moto</Text>
-      </TouchableOpacity>
+        {/* Tecno picker */}
+        <Text style={styles.label}>Vencimiento Tecnomecánica</Text>
+        <TouchableOpacity
+          style={[styles.dateBtn, tecno && styles.dateBtnActivo]}
+          onPress={() => {
+            setTempDateTecno(tecno ? fechaADate(tecno) : new Date())
+            setMostrarPickerTecno(true)
+          }}
+        >
+          <Text style={[styles.dateBtnTexto, tecno && styles.dateBtnTextoActivo]}>
+            {tecno ? formatearFecha(tecno) : 'Seleccionar fecha'}
+          </Text>
+          <Text style={styles.dateBtnIcono}>📅</Text>
+        </TouchableOpacity>
 
-      {/* Modal SOAT */}
-      <Modal visible={mostrarPickerSoat} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <LinearGradient
-              colors={['#1a1a2e', '#0d0d1a']}
-              style={styles.modalGradient}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitulo}>Vencimiento SOAT</Text>
-                <TouchableOpacity onPress={() => {
-                  setSoat(dateAFecha(tempDateSoat))
-                  setMostrarPickerSoat(false)
-                }}>
-                  <Text style={styles.modalConfirmar}>Confirmar</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDateSoat}
-                mode="date"
-                display="spinner"
-                onChange={(event, date) => {
-                  if (event.type === 'set' && date) {
-                    setSoat(dateAFecha(date))
-                  }
-                  setMostrarPickerSoat(false)
-                }}
-                minimumDate={new Date()}
-                themeVariant="dark"
-                locale="es-CO"
-              />
-            </LinearGradient>
+        {/* Botón guardar */}
+        <TouchableOpacity style={styles.botonGuardar} onPress={handleGuardar} disabled={guardando}>
+          <LinearGradient
+            colors={[colors.primario, colors.primarioOscuro]}
+            style={styles.botonGuardarGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            {guardando
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.botonTexto}>Guardar cambios</Text>
+            }
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.botonEliminar} onPress={handleEliminar}>
+          <Text style={styles.botonEliminarTexto}>Eliminar moto</Text>
+        </TouchableOpacity>
+
+        {/* Modal SOAT */}
+        <Modal visible={mostrarPickerSoat} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <LinearGradient
+                colors={['#1a1a2e', '#0d0d1a']}
+                style={styles.modalGradient}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitulo}>Vencimiento SOAT</Text>
+                  <TouchableOpacity onPress={() => {
+                    setSoat(dateAFecha(tempDateSoat))
+                    setMostrarPickerSoat(false)
+                  }}>
+                    <Text style={styles.modalConfirmar}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={tempDateSoat}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (event.type === 'set' && date) {
+                      setSoat(dateAFecha(date))
+                    }
+                    setMostrarPickerSoat(false)
+                  }}
+                  minimumDate={new Date()}
+                  themeVariant="dark"
+                  locale="es-CO"
+                />
+              </LinearGradient>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      {/* Modal Tecno */}
-      <Modal visible={mostrarPickerTecno} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <LinearGradient
-              colors={['#1a1a2e', '#0d0d1a']}
-              style={styles.modalGradient}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitulo}>Vencimiento Tecnomecánica</Text>
-                <TouchableOpacity onPress={() => {
-                  setTecno(dateAFecha(tempDateTecno))
-                  setMostrarPickerTecno(false)
-                }}>
-                  <Text style={styles.modalConfirmar}>Confirmar</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDateTecno}
-                mode="date"
-                display="spinner"
-                onChange={(event, date) => {
-                  if (event.type === 'set' && date) {
-                    setTecno(dateAFecha(date))
-                  }
-                  setMostrarPickerTecno(false)
-                }}
-                minimumDate={new Date()}
-                themeVariant="dark"
-                locale="es-CO"
-              />
-            </LinearGradient>
+        {/* Modal Tecno */}
+        <Modal visible={mostrarPickerTecno} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <LinearGradient
+                colors={['#1a1a2e', '#0d0d1a']}
+                style={styles.modalGradient}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitulo}>Vencimiento Tecnomecánica</Text>
+                  <TouchableOpacity onPress={() => {
+                    setTecno(dateAFecha(tempDateTecno))
+                    setMostrarPickerTecno(false)
+                  }}>
+                    <Text style={styles.modalConfirmar}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={tempDateTecno}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (event.type === 'set' && date) {
+                      setTecno(dateAFecha(date))
+                    }
+                    setMostrarPickerTecno(false)
+                  }}
+                  minimumDate={new Date()}
+                  themeVariant="dark"
+                  locale="es-CO"
+                />
+              </LinearGradient>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>  
   )
 }

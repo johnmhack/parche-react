@@ -11,6 +11,7 @@ import {
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { colors } from '../../lib/colors'
 
 type Moto = {
   id: string
@@ -25,7 +26,7 @@ type Moto = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   ambientTop: {
     position: 'absolute',
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tituloNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   limiteBadge: {
     flexDirection: 'row',
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   planTextoPremium: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   // Moto card
   motoCard: {
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   motoCyan: {
-    color: '#00E5FF',
+    color: colors.secundario,
   },
   motoCardBottom: {
     flexDirection: 'row',
@@ -292,7 +293,7 @@ export default function Garaje() {
             onPress={() => router.push('/agregar-moto')}
           >
             <LinearGradient
-              colors={['#FF6B1A', '#e55a00']}
+              colors={[colors.primario, colors.primarioOscuro]}
               style={styles.fabGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -307,7 +308,7 @@ export default function Garaje() {
           >
             <View style={styles.motoCard}>
               <LinearGradient
-                colors={['#1a0a00', '#0d0d1a']}
+                colors={[colors.card, '#0d0d1a']}
                 style={styles.motoCardGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

@@ -11,11 +11,13 @@ import {
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     padding: 20,
     paddingTop: 60,
   },
@@ -33,7 +35,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   backTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '600',
   },

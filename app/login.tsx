@@ -15,11 +15,13 @@ import {
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   gradientBg: {
     position: 'absolute',
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   appNombreNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   appTagline: {
     fontSize: 14,
@@ -177,7 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registroLink: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontWeight: '700',
   },
   // Footer
@@ -218,7 +220,7 @@ export default function Login() {
     <View style={styles.container}>
       {/* Fondo */}
       <LinearGradient
-        colors={['#0d0500', '#080A0F', '#00080d']}
+        colors={['#0d0500', colors.bg, '#00080d']}
         style={styles.gradientBg}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -230,95 +232,97 @@ export default function Login() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Hero */}
-          <View style={styles.heroWrap}>
-            <View style={styles.logoWrap}>
-              <Text style={styles.logoEmoji}>🏍️</Text>
-            </View>
-            <Text style={styles.appNombre}>
-              PAR<Text style={styles.appNombreNaranja}>CHE</Text>
-            </Text>
-            <Text style={styles.appTagline}>El parche de los moteros</Text>
-          </View>
-
-          {/* Card formulario */}
-          <View style={styles.card}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
-              style={styles.cardGradient}
-            >
-              <Text style={styles.cardTitulo}>Bienvenido de nuevo</Text>
-              <Text style={styles.cardSubtitulo}>Ingresa a tu garaje digital</Text>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Correo electrónico</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="tu@correo.com"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Hero */}
+            <View style={styles.heroWrap}>
+              <View style={styles.logoWrap}>
+                <Text style={styles.logoEmoji}>🏍️</Text>
               </View>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </View>
-
-              <TouchableOpacity style={styles.boton} onPress={handleLogin} disabled={cargando}>
-                <LinearGradient
-                  colors={['#FF6B1A', '#e55a00']}
-                  style={styles.botonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  {cargando
-                    ? <ActivityIndicator color="#fff" />
-                    : <Text style={styles.botonTexto}>ENTRAR AL PARCHE 🏍️</Text>
-                  }
-                </LinearGradient>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.dividerWrap}>
-            <View style={styles.dividerLinea} />
-            <Text style={styles.dividerTexto}>¿NUEVO POR ACÁ?</Text>
-            <View style={styles.dividerLinea} />
-          </View>
-
-          {/* Registro */}
-          <View style={styles.registroWrap}>
-            <TouchableOpacity onPress={() => router.push('/registro')}>
-              <Text style={styles.registroTexto}>
-                ¿No tienes cuenta?{' '}
-                <Text style={styles.registroLink}>Regístrate gratis</Text>
+              <Text style={styles.appNombre}>
+                PAR<Text style={styles.appNombreNaranja}>CHE</Text>
               </Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.appTagline}>El parche de los moteros</Text>
+            </View>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerTexto}>HECHO CON ❤️ PARA LOS MOTEROS CO</Text>
-          </View>
+            {/* Card formulario */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
+                style={styles.cardGradient}
+              >
+                <Text style={styles.cardTitulo}>Bienvenido de nuevo</Text>
+                <Text style={styles.cardSubtitulo}>Ingresa a tu garaje digital</Text>
 
-        </ScrollView>
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Correo electrónico</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="tu@correo.com"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Contraseña</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+
+                <TouchableOpacity style={styles.boton} onPress={handleLogin} disabled={cargando}>
+                  <LinearGradient
+                    colors={[colors.primario, colors.primarioOscuro]}
+                    style={styles.botonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {cargando
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={styles.botonTexto}>ENTRAR AL PARCHE 🏍️</Text>
+                    }
+                  </LinearGradient>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.dividerWrap}>
+              <View style={styles.dividerLinea} />
+              <Text style={styles.dividerTexto}>¿NUEVO POR ACÁ?</Text>
+              <View style={styles.dividerLinea} />
+            </View>
+
+            {/* Registro */}
+            <View style={styles.registroWrap}>
+              <TouchableOpacity onPress={() => router.push('/registro')}>
+                <Text style={styles.registroTexto}>
+                  ¿No tienes cuenta?{' '}
+                  <Text style={styles.registroLink}>Regístrate gratis</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerTexto}>HECHO CON ❤️ PARA LOS MOTEROS CO</Text>
+            </View>
+
+          </ScrollView>
+        </SafeAreaView>  
       </KeyboardAvoidingView>
     </View>
   )

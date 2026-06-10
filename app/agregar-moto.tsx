@@ -12,11 +12,13 @@ import {
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     padding: 20,
     paddingTop: 60,
   },
@@ -25,7 +27,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -37,7 +39,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tituloNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   seccionLabel: {
     fontSize: 13,
@@ -159,102 +161,104 @@ export default function AgregarMoto() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-      <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backTexto}>← Volver</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+          <Text style={styles.backTexto}>← Volver</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.titulo}>
-        Agregar <Text style={styles.tituloNaranja}>Moto</Text>
-      </Text>
+        <Text style={styles.titulo}>
+          Agregar <Text style={styles.tituloNaranja}>Moto</Text>
+        </Text>
 
-      <Text style={styles.seccionLabel}>Datos básicos</Text>
+        <Text style={styles.seccionLabel}>Datos básicos</Text>
 
-      <Text style={styles.label}>Placa *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="ABC123"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={placa}
-        onChangeText={setPlaca}
-        autoCapitalize="characters"
-      />
+        <Text style={styles.label}>Placa *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="ABC123"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={placa}
+          onChangeText={setPlaca}
+          autoCapitalize="characters"
+        />
 
-      <Text style={styles.label}>Marca *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Honda, Yamaha..."
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={marca}
-        onChangeText={setMarca}
-      />
+        <Text style={styles.label}>Marca *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Honda, Yamaha..."
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={marca}
+          onChangeText={setMarca}
+        />
 
-      <Text style={styles.label}>Modelo *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="CB190, FZ25..."
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={modelo}
-        onChangeText={setModelo}
-      />
+        <Text style={styles.label}>Modelo *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="CB190, FZ25..."
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={modelo}
+          onChangeText={setModelo}
+        />
 
-      <Text style={styles.label}>Año *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="2022"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={anio}
-        onChangeText={setAnio}
-        keyboardType="numeric"
-      />
+        <Text style={styles.label}>Año *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="2022"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={anio}
+          onChangeText={setAnio}
+          keyboardType="numeric"
+        />
 
-      <View style={styles.divider} />
-      <Text style={styles.seccionLabel}>Detalles</Text>
+        <View style={styles.divider} />
+        <Text style={styles.seccionLabel}>Detalles</Text>
 
-      <Text style={styles.label}>Cilindraje (cc)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="150"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={cilindraje}
-        onChangeText={setCilindraje}
-        keyboardType="numeric"
-      />
+        <Text style={styles.label}>Cilindraje (cc)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="150"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={cilindraje}
+          onChangeText={setCilindraje}
+          keyboardType="numeric"
+        />
 
-      <Text style={styles.label}>Color</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Rojo, Negro..."
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={color}
-        onChangeText={setColor}
-      />
+        <Text style={styles.label}>Color</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Rojo, Negro..."
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={color}
+          onChangeText={setColor}
+        />
 
-      <Text style={styles.label}>Kilometraje actual</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="15000"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={kilometraje}
-        onChangeText={setKilometraje}
-        keyboardType="numeric"
-      />
+        <Text style={styles.label}>Kilometraje actual</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="15000"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={kilometraje}
+          onChangeText={setKilometraje}
+          keyboardType="numeric"
+        />
 
-      <TouchableOpacity style={styles.boton} onPress={handleAgregar} disabled={cargando}>
-        <LinearGradient
-          colors={['#FF6B1A', '#e55a00']}
-          style={styles.botonGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          {cargando
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.botonTexto}>Agregar al garaje 🏍️</Text>
-          }
-        </LinearGradient>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.boton} onPress={handleAgregar} disabled={cargando}>
+          <LinearGradient
+            colors={[colors.primario, colors.primarioOscuro]}
+            style={styles.botonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            {cargando
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.botonTexto}>Agregar al garaje 🏍️</Text>
+            }
+          </LinearGradient>
+        </TouchableOpacity>
 
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>    
   )
 }

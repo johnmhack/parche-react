@@ -14,11 +14,13 @@ import {
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   gradientBg: {
     position: 'absolute',
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appNombreNaranja: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   appTagline: {
     fontSize: 13,
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginLink: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontWeight: '700',
   },
   footer: {
@@ -243,7 +245,7 @@ export default function Registro() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#0d0500', '#080A0F', '#00080d']}
+        colors={['#0d0500', colors.bg, '#00080d']}
         style={styles.gradientBg}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -255,125 +257,127 @@ export default function Registro() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Hero */}
-          <View style={styles.heroWrap}>
-            <View style={styles.logoWrap}>
-              <Text style={styles.logoEmoji}>🏍️</Text>
-            </View>
-            <Text style={styles.appNombre}>
-              PAR<Text style={styles.appNombreNaranja}>CHE</Text>
-            </Text>
-            <Text style={styles.appTagline}>Únete al parche</Text>
-          </View>
-
-          {/* Card */}
-          <View style={styles.card}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
-              style={styles.cardGradient}
-            >
-              <Text style={styles.cardTitulo}>Crea tu cuenta</Text>
-              <Text style={styles.cardSubtitulo}>Gratis para siempre en el plan básico</Text>
-
-              {/* Badge plan gratis */}
-              <View style={styles.planBadge}>
-                <Text>🆓</Text>
-                <Text style={styles.planTexto}>
-                  Plan gratuito incluye 2 motos y 1 contacto SOS. Actualiza a Premium cuando quieras.
-                </Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Hero */}
+            <View style={styles.heroWrap}>
+              <View style={styles.logoWrap}>
+                <Text style={styles.logoEmoji}>🏍️</Text>
               </View>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Nombre completo *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Tu nombre"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={nombre}
-                  onChangeText={setNombre}
-                />
-              </View>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Correo electrónico *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="tu@correo.com"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Teléfono (opcional)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="300 000 0000"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={telefono}
-                  onChangeText={setTelefono}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.inputWrap}>
-                <Text style={styles.label}>Contraseña *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </View>
-
-              <TouchableOpacity style={styles.boton} onPress={handleRegistro} disabled={cargando}>
-                <LinearGradient
-                  colors={['#FF6B1A', '#e55a00']}
-                  style={styles.botonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  {cargando
-                    ? <ActivityIndicator color="#fff" />
-                    : <Text style={styles.botonTexto}>UNIRME AL PARCHE 🏍️</Text>
-                  }
-                </LinearGradient>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.dividerWrap}>
-            <View style={styles.dividerLinea} />
-            <Text style={styles.dividerTexto}>¿YA TIENES CUENTA?</Text>
-            <View style={styles.dividerLinea} />
-          </View>
-
-          {/* Login */}
-          <View style={styles.loginWrap}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.loginTexto}>
-                ¿Ya tienes cuenta?{' '}
-                <Text style={styles.loginLink}>Inicia sesión</Text>
+              <Text style={styles.appNombre}>
+                PAR<Text style={styles.appNombreNaranja}>CHE</Text>
               </Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.appTagline}>Únete al parche</Text>
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerTexto}>HECHO CON ❤️ PARA LOS MOTEROS CO</Text>
-          </View>
+            {/* Card */}
+            <View style={styles.card}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
+                style={styles.cardGradient}
+              >
+                <Text style={styles.cardTitulo}>Crea tu cuenta</Text>
+                <Text style={styles.cardSubtitulo}>Gratis para siempre en el plan básico</Text>
 
-        </ScrollView>
+                {/* Badge plan gratis */}
+                <View style={styles.planBadge}>
+                  <Text>🆓</Text>
+                  <Text style={styles.planTexto}>
+                    Plan gratuito incluye 2 motos y 1 contacto SOS. Actualiza a Premium cuando quieras.
+                  </Text>
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Nombre completo *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Tu nombre"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={nombre}
+                    onChangeText={setNombre}
+                  />
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Correo electrónico *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="tu@correo.com"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Teléfono (opcional)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="300 000 0000"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={telefono}
+                    onChangeText={setTelefono}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.label}>Contraseña *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor="rgba(255,255,255,0.2)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+
+                <TouchableOpacity style={styles.boton} onPress={handleRegistro} disabled={cargando}>
+                  <LinearGradient
+                    colors={[colors.primario, colors.primarioOscuro]}
+                    style={styles.botonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {cargando
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text style={styles.botonTexto}>UNIRME AL PARCHE 🏍️</Text>
+                    }
+                  </LinearGradient>
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.dividerWrap}>
+              <View style={styles.dividerLinea} />
+              <Text style={styles.dividerTexto}>¿YA TIENES CUENTA?</Text>
+              <View style={styles.dividerLinea} />
+            </View>
+
+            {/* Login */}
+            <View style={styles.loginWrap}>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Text style={styles.loginTexto}>
+                  ¿Ya tienes cuenta?{' '}
+                  <Text style={styles.loginLink}>Inicia sesión</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerTexto}>HECHO CON ❤️ PARA LOS MOTEROS CO</Text>
+            </View>
+
+          </ScrollView>
+        </SafeAreaView>  
       </KeyboardAvoidingView>
     </View>
   )

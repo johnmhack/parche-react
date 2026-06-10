@@ -12,6 +12,7 @@ import {
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { colors } from '../../lib/colors'
 
 type Moto = {
   id: string
@@ -34,7 +35,7 @@ type Registro = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   ambientTop: {
     position: 'absolute',
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tituloCyan: {
-    color: '#00E5FF',
+    color: colors.secundario,
   },
   // Chips selector
   selectorWrap: {
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   motoChipTextoActivo: {
-    color: '#FF6B1A',
+    color: colors.primario,
   },
   // Lista
   listContent: {
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   },
   costoTexto: {
     fontSize: 11,
-    color: '#FF6B1A',
+    color: colors.primario,
     fontWeight: '700',
   },
   // Vacío
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   botonTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -372,7 +373,7 @@ export default function Historial() {
                         <Text style={styles.propietarioLabel}>Propietario</Text>
                       )}
                       <View style={[styles.badge, item.verificado ? styles.badgeVerificado : styles.badgeEditar]}>
-                        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : '#FF6B1A' }]}>
+                        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : colors.primario }]}>
                           {item.verificado ? '✓ Verificado' : 'Editar →'}
                         </Text>
                       </View>
@@ -417,7 +418,7 @@ export default function Historial() {
           onPress={() => router.push({ pathname: '/agregar-historial', params: { motoId: motoSeleccionada?.id, placa: motoSeleccionada?.placa } })}
         >
           <LinearGradient
-            colors={['#FF6B1A', '#e55a00']}
+            colors={[colors.primario, colors.primarioOscuro]}
             style={styles.fabGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}

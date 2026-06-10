@@ -11,6 +11,7 @@ import * as Location from 'expo-location'
 import { useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
+import { colors } from '../../lib/colors'
 
 type Taller = {
   id: string
@@ -31,11 +32,11 @@ type Ubicacion = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   },
   calloutCalificacion: {
     fontSize: 12,
-    color: '#f97316',
+    color: colors.primario,
     fontWeight: '600',
   },
   calloutTelefono: {
@@ -162,7 +163,7 @@ export default function Mapa() {
 
       {/* Header flotante sobre el mapa */}
       <LinearGradient
-        colors={['#080A0F', 'rgba(8,10,15,0.85)', 'transparent']}
+        colors={[colors.bg, 'rgba(8,10,15,0.85)', 'transparent']}
         style={styles.headerGradient}
         pointerEvents="none"
       />

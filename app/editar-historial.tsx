@@ -14,6 +14,8 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { supabase } from '../lib/supabase'
+import { colors } from '../lib/colors'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const TIPOS_SERVICIO = [
   'Cambio de aceite',
@@ -40,13 +42,13 @@ function dateAFecha(date: Date) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     padding: 20,
     paddingTop: 60,
   },
   centered: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -55,7 +57,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   tituloCyan: {
-    color: '#00E5FF',
+    color: colors.secundario,
   },
   subtituloBadge: {
     flexDirection: 'row',
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chipTextoActivo: {
-    color: '#00E5FF',
+    color: colors.secundario,
     fontWeight: '700',
   },
   input: {
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   modalConfirmar: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -296,131 +298,133 @@ export default function EditarHistorial() {
   )
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-      <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-        <Text style={styles.backTexto}>← Volver</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+          <Text style={styles.backTexto}>← Volver</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.titulo}>
-        Editar <Text style={styles.tituloCyan}>Registro</Text>
-      </Text>
-
-      <View style={styles.subtituloBadge}>
-        <View style={styles.propietarioBadge}>
-          <Text style={styles.propietarioTexto}>👤 Solo puedes editar tus propios registros</Text>
-        </View>
-      </View>
-
-      <Text style={styles.seccionLabel}>Tipo de servicio *</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsWrap}>
-        {TIPOS_SERVICIO.map((tipo) => (
-          <TouchableOpacity
-            key={tipo}
-            style={[styles.chip, tipoServicio === tipo && styles.chipActivo]}
-            onPress={() => setTipoServicio(tipo)}
-          >
-            <Text style={[styles.chipTexto, tipoServicio === tipo && styles.chipTextoActivo]}>
-              {tipo}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <View style={styles.divider} />
-      <Text style={styles.seccionLabel}>Detalles</Text>
-
-      <Text style={styles.label}>Descripción</Text>
-      <TextInput
-        style={[styles.input, styles.inputMultiline]}
-        placeholder="¿Qué le hicieron a la moto?"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={descripcion}
-        onChangeText={setDescripcion}
-        multiline
-        numberOfLines={3}
-      />
-
-      <Text style={styles.label}>Fecha</Text>
-      <TouchableOpacity
-        style={styles.dateBtn}
-        onPress={() => {
-          setTempDate(fecha ? new Date(fecha + 'T12:00:00') : new Date())
-          setMostrarPicker(true)
-        }}
-      >
-        <Text style={styles.dateBtnTexto}>
-          {fecha ? formatearFecha(fecha) : 'Seleccionar fecha'}
+        <Text style={styles.titulo}>
+          Editar <Text style={styles.tituloCyan}>Registro</Text>
         </Text>
-        <Text style={styles.dateBtnIcono}>📅</Text>
-      </TouchableOpacity>
 
-      <Text style={styles.label}>Kilometraje</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="15000"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={kilometraje}
-        onChangeText={setKilometraje}
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Costo (COP)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="50000"
-        placeholderTextColor="rgba(255,255,255,0.25)"
-        value={costo}
-        onChangeText={setCosto}
-        keyboardType="numeric"
-      />
-
-      <TouchableOpacity style={styles.boton} onPress={handleGuardar} disabled={guardando}>
-        <LinearGradient
-          colors={['#FF6B1A', '#e55a00']}
-          style={styles.botonGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          {guardando
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.botonTexto}>Guardar cambios 📋</Text>
-          }
-        </LinearGradient>
-      </TouchableOpacity>
-
-      <Modal visible={mostrarPicker} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <LinearGradient
-              colors={['#1a1a2e', '#0d0d1a']}
-              style={styles.modalGradient}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitulo}>Fecha del servicio</Text>
-                <TouchableOpacity onPress={() => setMostrarPicker(false)}>
-                  <Text style={styles.modalConfirmar}>Cerrar</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={(event, date) => {
-                  if (event.type === 'set' && date) {
-                    setFecha(dateAFecha(date))
-                  }
-                  setMostrarPicker(false)
-                }}
-                maximumDate={new Date()}
-                themeVariant="dark"
-                locale="es-CO"
-              />
-            </LinearGradient>
+        <View style={styles.subtituloBadge}>
+          <View style={styles.propietarioBadge}>
+            <Text style={styles.propietarioTexto}>👤 Solo puedes editar tus propios registros</Text>
           </View>
         </View>
-      </Modal>
 
-    </ScrollView>
+        <Text style={styles.seccionLabel}>Tipo de servicio *</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsWrap}>
+          {TIPOS_SERVICIO.map((tipo) => (
+            <TouchableOpacity
+              key={tipo}
+              style={[styles.chip, tipoServicio === tipo && styles.chipActivo]}
+              onPress={() => setTipoServicio(tipo)}
+            >
+              <Text style={[styles.chipTexto, tipoServicio === tipo && styles.chipTextoActivo]}>
+                {tipo}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.divider} />
+        <Text style={styles.seccionLabel}>Detalles</Text>
+
+        <Text style={styles.label}>Descripción</Text>
+        <TextInput
+          style={[styles.input, styles.inputMultiline]}
+          placeholder="¿Qué le hicieron a la moto?"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={descripcion}
+          onChangeText={setDescripcion}
+          multiline
+          numberOfLines={3}
+        />
+
+        <Text style={styles.label}>Fecha</Text>
+        <TouchableOpacity
+          style={styles.dateBtn}
+          onPress={() => {
+            setTempDate(fecha ? new Date(fecha + 'T12:00:00') : new Date())
+            setMostrarPicker(true)
+          }}
+        >
+          <Text style={styles.dateBtnTexto}>
+            {fecha ? formatearFecha(fecha) : 'Seleccionar fecha'}
+          </Text>
+          <Text style={styles.dateBtnIcono}>📅</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.label}>Kilometraje</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="15000"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={kilometraje}
+          onChangeText={setKilometraje}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Costo (COP)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="50000"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          value={costo}
+          onChangeText={setCosto}
+          keyboardType="numeric"
+        />
+
+        <TouchableOpacity style={styles.boton} onPress={handleGuardar} disabled={guardando}>
+          <LinearGradient
+            colors={[colors.primario, colors.primarioOscuro]}
+            style={styles.botonGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            {guardando
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.botonTexto}>Guardar cambios 📋</Text>
+            }
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <Modal visible={mostrarPicker} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <LinearGradient
+                colors={['#1a1a2e', '#0d0d1a']}
+                style={styles.modalGradient}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitulo}>Fecha del servicio</Text>
+                  <TouchableOpacity onPress={() => setMostrarPicker(false)}>
+                    <Text style={styles.modalConfirmar}>Cerrar</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (event.type === 'set' && date) {
+                      setFecha(dateAFecha(date))
+                    }
+                    setMostrarPicker(false)
+                  }}
+                  maximumDate={new Date()}
+                  themeVariant="dark"
+                  locale="es-CO"
+                />
+              </LinearGradient>
+            </View>
+          </View>
+        </Modal>
+
+      </ScrollView>
+    </SafeAreaView>  
   )
 }

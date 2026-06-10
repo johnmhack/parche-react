@@ -15,6 +15,7 @@ import { supabase } from '../../lib/supabase'
 import { useRef } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LinearGradient } from 'expo-linear-gradient'
+import { colors } from '../../lib/colors'
 
 type Contacto = {
   id: string
@@ -25,7 +26,7 @@ type Contacto = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F',
+    backgroundColor: colors.bg,
   },
   ambientTop: {
     position: 'absolute',
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   agregarTexto: {
-    color: '#FF6B1A',
+    color: colors.primario,
     fontSize: 12,
     fontWeight: '700',
   },
