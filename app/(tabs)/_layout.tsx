@@ -1,10 +1,44 @@
-import { Tabs } from 'expo-router'
+import { Redirect, Tabs } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { colors } from '../../lib/colors'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
-
+import { useEffect, useState } from 'react'
+import { ActivityIndicator, View } from 'react-native'
+import { Session } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
+import { guardarSesionCache, obtenerSesionCache } from '../../lib/carga'
 
 export default function TabsLayout() {
+  const [session, setSession] = useState<Session | null | undefined>(obtenerSesionCache())
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      guardarSesionCache(session)
+      setSession(session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      guardarSesionCache(session)
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (session === undefined) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.primario} size="large" />
+      </View>
+    )
+  }
+
+  if (!session) {
+    return <Redirect href="/login" />
+  }
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>

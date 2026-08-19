@@ -8,7 +8,9 @@ import {
   Alert,
   ScrollView,
 } from 'react-native'
-import { router, useFocusEffect } from 'expo-router'
+import { router } from 'expo-router'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
+import { reiniciarCacheCarga } from '../../lib/carga'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
@@ -202,15 +204,7 @@ const styles = StyleSheet.create({
 
 export default function Perfil() {
   const [perfil, setPerfil] = useState<Perfil | null>(null)
-  const [cargando, setCargando] = useState(true)
-
-  useFocusEffect(
-    useCallback(() => {
-      cargarPerfil()
-    }, [])
-  )
-
-  async function cargarPerfil() {
+  const cargarPerfil = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -222,11 +216,13 @@ export default function Perfil() {
 
     if (error) Alert.alert('Error', error.message)
     else setPerfil({ ...data, email: user.email || '' })
-    setCargando(false)
-  }
+  }, [])
+
+  const cargando = useRecargaEnFoco('perfil', cargarPerfil)
 
   async function handleLogout() {
     await supabase.auth.signOut()
+    reiniciarCacheCarga()
     router.replace('/login')
   }
 
@@ -281,7 +277,7 @@ export default function Perfil() {
           >
             <View style={styles.stat}>
               <Text style={styles.statNumero}>{perfil?.tuercas_acumuladas}</Text>
-              <Text style={styles.statLabel}>🔩 Tuercas</Text>
+              <Text style={styles.statLabel}>Tuercas</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.stat}>
@@ -291,7 +287,7 @@ export default function Perfil() {
             <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Text style={styles.statNumero}>
-                {perfil?.plan === 'premium' ? '⚡' : '🆓'}
+                {perfil?.plan === 'premium' ? 'Premium' : 'Free'}
               </Text>
               <Text style={styles.statLabel}>
                 {perfil?.plan === 'premium' ? 'Premium' : 'Free'}
@@ -313,7 +309,7 @@ export default function Perfil() {
               </View>
             )}
             <View style={[styles.infoFila, styles.infoFilaLast]}>
-              <Text style={styles.infoLabel}>📍 Ciudad</Text>
+              <Text style={styles.infoLabel}>Ciudad</Text>
               <Text style={styles.infoValor}>{perfil?.ciudad}</Text>
             </View>
           </LinearGradient>

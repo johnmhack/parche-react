@@ -253,7 +253,7 @@ export default function AgregarMoto() {
           >
             {cargando
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.botonTexto}>Agregar al garaje 🏍️</Text>
+              : <Text style={styles.botonTexto}>Agregar al garaje</Text>
             }
           </LinearGradient>
         </TouchableOpacity>

@@ -11,6 +11,7 @@ export default function Layout() {
       <Stack.Screen name="editar-historial" />
       <Stack.Screen name="agregar-contacto-sos" />
       <Stack.Screen name="admin" />
+      <Stack.Screen name="taller/[id]" />
       <Stack.Screen name="(tabs)" />
     </Stack>
   )

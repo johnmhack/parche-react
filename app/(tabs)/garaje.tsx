@@ -8,10 +8,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native'
-import { router, useFocusEffect } from 'expo-router'
+import { router } from 'expo-router'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
+import { getCache, setCache } from '../../lib/carga'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
+import { Icono } from '../../lib/iconos'
 
 type Moto = {
   id: string
@@ -176,8 +179,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  vacioEmoji: {
-    fontSize: 48,
+  vacioIconoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,107,26,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
   },
   vacioTexto: {
@@ -208,18 +216,14 @@ const styles = StyleSheet.create({
   },
 })
 
+type GarajeCache = { motos: Moto[]; plan: string }
+
 export default function Garaje() {
-  const [motos, setMotos] = useState<Moto[]>([])
-  const [plan, setPlan] = useState('free')
-  const [cargando, setCargando] = useState(true)
+  const cacheInicial = getCache<GarajeCache>('garaje')
+  const [motos, setMotos] = useState<Moto[]>(cacheInicial?.motos ?? [])
+  const [plan, setPlan] = useState(cacheInicial?.plan ?? 'free')
 
-  useFocusEffect(
-    useCallback(() => {
-      cargarMotos()
-    }, [])
-  )
-
-  async function cargarMotos() {
+  const cargarMotos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -229,7 +233,8 @@ export default function Garaje() {
       .eq('id', user.id)
       .single()
 
-    if (perfilData) setPlan(perfilData.plan)
+    const planActual = perfilData?.plan ?? 'free'
+    if (perfilData) setPlan(planActual)
 
     const { data, error } = await supabase
       .from('motos')
@@ -238,9 +243,15 @@ export default function Garaje() {
       .eq('activa', true)
 
     if (error) Alert.alert('Error', error.message)
-    else setMotos(data || [])
-    setCargando(false)
-  }
+    else {
+      const lista = data || []
+      setMotos(lista)
+      setCache('garaje', { motos: lista, plan: planActual })
+    }
+  }, [])
+
+  const cargandoRemoto = useRecargaEnFoco('garaje', cargarMotos)
+  const cargando = cargandoRemoto && motos.length === 0
 
   if (cargando) return (
     <View style={styles.centered}>
@@ -266,7 +277,7 @@ export default function Garaje() {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.titulo}>
-              Mi <Text style={styles.tituloNaranja}>Garaje</Text> 🏍️
+              Mi <Text style={styles.tituloNaranja}>Garaje</Text>
             </Text>
             <View style={styles.limiteBadge}>
               <Text style={styles.limiteTexto}>
@@ -274,7 +285,7 @@ export default function Garaje() {
               </Text>
               <View style={[styles.planBadge, plan === 'premium' ? styles.planBadgePremium : styles.planBadgeFree]}>
                 <Text style={[styles.planTexto, plan === 'premium' ? styles.planTextoPremium : styles.planTextoFree]}>
-                  {plan === 'premium' ? '⚡ Premium' : '🆓 Free'}
+                  {plan === 'premium' ? 'Premium' : 'Free'}
                 </Text>
               </View>
             </View>
@@ -282,7 +293,9 @@ export default function Garaje() {
         }
         ListEmptyComponent={
           <View style={styles.vacio}>
-            <Text style={styles.vacioEmoji}>🏍️</Text>
+            <View style={styles.vacioIconoWrap}>
+              <Icono name="speedometer" size={36} color={colors.primario} />
+            </View>
             <Text style={styles.vacioTexto}>No tienes motos registradas</Text>
             <Text style={styles.vacioSub}>Agrega tu primera moto</Text>
           </View>
@@ -332,7 +345,7 @@ export default function Garaje() {
                     <Text style={styles.detalleTexto}>{item.color}</Text>
                   </View>
                   <View style={styles.detalleBadge}>
-                    <Text>📍</Text>
+                    <Icono name="speedometer-outline" size={14} color={colors.textoSub} />
                     <Text style={styles.detalleTexto}>{item.kilometraje_actual} km</Text>
                   </View>
                 </View>

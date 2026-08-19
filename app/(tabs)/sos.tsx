@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   View,
   Text,
@@ -12,9 +12,9 @@ import {
 import * as Location from 'expo-location'
 import { useFocusEffect, router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
-import { useRef } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
 import { colors } from '../../lib/colors'
 
 type Contacto = {
@@ -207,16 +207,28 @@ const styles = StyleSheet.create({
 export default function SOS() {
   const [contactos, setContactos] = useState<Contacto[]>([])
   const [enviando, setEnviando] = useState(false)
-  const [cargando, setCargando] = useState(true)
   const [progreso, setProgreso] = useState(0)
   const [enCooldown, setEnCooldown] = useState(false)
   const [minutosRestantes, setMinutosRestantes] = useState(0)
   const intervalRef = useRef<any>(null)
   const progresoRef = useRef<any>(null)
 
+  const cargarContactos = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase
+      .from('contactos_sos')
+      .select('*')
+      .eq('usuario_id', user.id)
+
+    setContactos(data || [])
+  }, [])
+
+  const cargando = useRecargaEnFoco('sos', cargarContactos)
+
   useFocusEffect(
     useCallback(() => {
-      cargarContactos()
       verificarCooldown()
     }, [])
   )
@@ -244,19 +256,6 @@ export default function SOS() {
         }
       }, 60000)
     }
-  }
-
-  async function cargarContactos() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data } = await supabase
-      .from('contactos_sos')
-      .select('*')
-      .eq('usuario_id', user.id)
-
-    setContactos(data || [])
-    setCargando(false)
   }
 
   async function handleSOS() {

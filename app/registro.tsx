@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
 import { colors } from '../lib/colors'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image } from 'react-native'
 
 const styles = StyleSheet.create({
   container: {
@@ -208,21 +209,30 @@ export default function Registro() {
   const [cargando, setCargando] = useState(false)
 
   async function handleRegistro() {
-    if (!nombre || !email || !password) {
+    const correo = email.trim().toLowerCase()
+    if (!nombre || !correo || !password) {
       Alert.alert('Error', 'Nombre, correo y contraseña son obligatorios')
+      return
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres')
       return
     }
     setCargando(true)
 
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    try {
+      const { data, error } = await supabase.auth.signUp({ email: correo, password })
 
-    if (error) {
-      Alert.alert('Error', error.message)
-      setCargando(false)
-      return
-    }
+      if (error) {
+        Alert.alert('Error', error.message)
+        return
+      }
 
-    if (data.user) {
+      if (!data.user) {
+        Alert.alert('Error', 'No se pudo crear la cuenta')
+        return
+      }
+
       const { error: perfilError } = await supabase.from('perfiles').insert({
         id: data.user.id,
         rol: 'motero',
@@ -233,13 +243,24 @@ export default function Registro() {
 
       if (perfilError) {
         Alert.alert('Error', perfilError.message)
-        setCargando(false)
         return
       }
-    }
 
-    Alert.alert('¡Listo!', 'Cuenta creada exitosamente')
-    setCargando(false)
+      if (data.session) {
+        router.replace('/(tabs)/home')
+        return
+      }
+
+      Alert.alert(
+        'Cuenta creada',
+        'Confirma tu correo e inicia sesión.',
+        [{ text: 'Ir al login', onPress: () => router.replace('/login') }]
+      )
+    } catch {
+      Alert.alert('Error', 'No se pudo conectar. Revisa tu internet.')
+    } finally {
+      setCargando(false)
+    }
   }
 
   return (
@@ -265,12 +286,11 @@ export default function Registro() {
           >
             {/* Hero */}
             <View style={styles.heroWrap}>
-              <View style={styles.logoWrap}>
-                <Text style={styles.logoEmoji}>🏍️</Text>
-              </View>
-              <Text style={styles.appNombre}>
-                PAR<Text style={styles.appNombreNaranja}>CHE</Text>
-              </Text>
+              <Image
+                source={require('../assets/images/logo-icono.png')}
+                style={{ width: 160, height: 160 }}
+                resizeMode="contain"
+              />
               <Text style={styles.appTagline}>Únete al parche</Text>
             </View>
 
@@ -348,7 +368,7 @@ export default function Registro() {
                   >
                     {cargando
                       ? <ActivityIndicator color="#fff" />
-                      : <Text style={styles.botonTexto}>UNIRME AL PARCHE 🏍️</Text>
+                      : <Text style={styles.botonTexto}>UNIRME AL PARCHE</Text>
                     }
                   </LinearGradient>
                 </TouchableOpacity>

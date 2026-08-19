@@ -8,7 +8,8 @@ import {
 } from 'react-native'
 import MapView, { Marker, Callout } from 'react-native-maps'
 import * as Location from 'expo-location'
-import { useFocusEffect } from 'expo-router'
+import { router } from 'expo-router'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
@@ -122,15 +123,8 @@ const styles = StyleSheet.create({
 export default function Mapa() {
   const [talleres, setTalleres] = useState<Taller[]>([])
   const [ubicacion, setUbicacion] = useState<Ubicacion | null>(null)
-  const [cargando, setCargando] = useState(true)
 
-  useFocusEffect(
-    useCallback(() => {
-      cargarDatos()
-    }, [])
-  )
-
-  async function cargarDatos() {
+  const cargarDatos = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync()
     if (status === 'granted') {
       const loc = await Location.getCurrentPositionAsync({})
@@ -149,8 +143,9 @@ export default function Mapa() {
 
     if (error) Alert.alert('Error', error.message)
     else setTalleres(data || [])
-    setCargando(false)
-  }
+  }, [])
+
+  const cargando = useRecargaEnFoco('mapa', cargarDatos)
 
   if (cargando) return (
     <View style={styles.centered}>
@@ -169,7 +164,7 @@ export default function Mapa() {
       />
       <View style={styles.header}>
         <Text style={styles.titulo}>
-          <Text style={styles.tituloVerde}>Talleres</Text> 🗺️
+          <Text style={styles.tituloVerde}>Talleres</Text>
         </Text>
         <Text style={styles.subtitulo}>{talleres.length} talleres disponibles</Text>
       </View>
@@ -194,6 +189,7 @@ export default function Mapa() {
               longitude: taller.longitud,
             }}
             pinColor="#00E676"
+            onCalloutPress={() => router.push({ pathname: '/taller/[id]', params: { id: taller.id } })}
           >
             <Callout>
               <View style={styles.callout}>

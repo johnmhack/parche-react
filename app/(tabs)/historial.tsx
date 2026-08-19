@@ -9,28 +9,15 @@ import {
   Alert,
   ScrollView,
 } from 'react-native'
-import { router, useFocusEffect } from 'expo-router'
+import { router } from 'expo-router'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
+import { debeMostrarSpinner } from '../../lib/carga'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
-
-type Moto = {
-  id: string
-  placa: string
-  marca: string
-  modelo: string
-}
-
-type Registro = {
-  id: string
-  tipo_servicio: string
-  descripcion: string
-  kilometraje: number
-  costo: number
-  fecha: string
-  verificado: boolean
-  taller_id: string | null
-}
+import { cargarHistorialMoto } from '../../lib/historial'
+import { Icono } from '../../lib/iconos'
+import type { Moto, RegistroHistorial } from '../../lib/types'
 
 const styles = StyleSheet.create({
   container: {
@@ -132,6 +119,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
+  tallerNombre: {
+    fontSize: 12,
+    color: colors.secundario,
+    marginBottom: 6,
+    fontWeight: '600',
+  },
   badge: {
     borderRadius: 20,
     paddingHorizontal: 10,
@@ -182,8 +175,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   // Vacío
-  vacioEmoji: {
-    fontSize: 44,
+  vacioIconoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,229,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  footerIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   vacioTexto: {
     fontSize: 17,
@@ -233,17 +237,22 @@ const styles = StyleSheet.create({
 export default function Historial() {
   const [motos, setMotos] = useState<Moto[]>([])
   const [motoSeleccionada, setMotoSeleccionada] = useState<Moto | null>(null)
-  const [registros, setRegistros] = useState<Registro[]>([])
-  const [cargando, setCargando] = useState(true)
+  const [registros, setRegistros] = useState<RegistroHistorial[]>([])
   const [cargandoRegistros, setCargandoRegistros] = useState(false)
 
-  useFocusEffect(
-    useCallback(() => {
-      cargarMotos()
-    }, [])
-  )
+  async function cargarRegistros(motoId: string, silencioso = false) {
+    if (!silencioso) setCargandoRegistros(true)
+    try {
+      const todos = await cargarHistorialMoto(motoId)
+      setRegistros(todos)
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'No se pudo cargar el historial')
+    }
+    setCargandoRegistros(false)
+  }
 
-  async function cargarMotos() {
+  const cargarMotos = useCallback(async () => {
+    const silencioso = !debeMostrarSpinner('historial')
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -258,28 +267,14 @@ export default function Historial() {
       setMotos(data || [])
       if (data && data.length > 0) {
         setMotoSeleccionada(data[0])
-        cargarRegistros(data[0].id)
+        await cargarRegistros(data[0].id, silencioso)
+      } else {
+        setRegistros([])
       }
     }
-    setCargando(false)
-  }
+  }, [])
 
-  async function cargarRegistros(motoId: string) {
-    setCargandoRegistros(true)
-
-    const [{ data: verificados }, { data: propietario }] = await Promise.all([
-      supabase.from('historial_moto').select('*').eq('moto_id', motoId).order('fecha', { ascending: false }),
-      supabase.from('historial_propietario').select('*').eq('moto_id', motoId).order('fecha', { ascending: false }),
-    ])
-
-    const todos = [
-      ...(verificados || []).map(r => ({ ...r, verificado: true })),
-      ...(propietario || []).map(r => ({ ...r, verificado: false, taller_id: null })),
-    ].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-
-    setRegistros(todos)
-    setCargandoRegistros(false)
-  }
+  const cargando = useRecargaEnFoco('historial', cargarMotos)
 
   function seleccionarMoto(moto: Moto) {
     setMotoSeleccionada(moto)
@@ -294,7 +289,9 @@ export default function Historial() {
 
   if (motos.length === 0) return (
     <View style={styles.centered}>
-      <Text style={styles.vacioEmoji}>📋</Text>
+      <View style={styles.vacioIconoWrap}>
+        <Icono name="document-text" size={36} color={colors.secundario} />
+      </View>
       <Text style={styles.vacioTexto}>No tienes motos registradas</Text>
       <TouchableOpacity style={styles.boton} onPress={() => router.push('/agregar-moto')}>
         <Text style={styles.botonTexto}>Agregar moto</Text>
@@ -315,7 +312,7 @@ export default function Historial() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.titulo}>
-          <Text style={styles.tituloCyan}>Historial</Text> 📋
+          <Text style={styles.tituloCyan}>Historial</Text>
         </Text>
       </View>
 
@@ -343,9 +340,11 @@ export default function Historial() {
         </View>
       ) : registros.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.vacioEmoji}>🔧</Text>
+          <View style={styles.vacioIconoWrap}>
+            <Icono name="construct" size={36} color={colors.primario} />
+          </View>
           <Text style={styles.vacioTexto}>Sin registros aún</Text>
-          <Text style={styles.vacioSub}>Agrega el primer servicio</Text>
+          <Text style={styles.vacioSub}>Agrega un servicio o visita un taller aliado</Text>
         </View>
       ) : (
         <FlatList
@@ -356,8 +355,10 @@ export default function Historial() {
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => {
-                if (!item.verificado) {
+                if (item.editable) {
                   router.push({ pathname: '/editar-historial', params: { registroId: item.id } })
+                } else if (item.taller_id) {
+                  router.push({ pathname: '/taller/[id]', params: { id: item.taller_id } })
                 }
               }}
             >
@@ -369,40 +370,44 @@ export default function Historial() {
                   <View style={styles.tarjetaHeader}>
                     <Text style={styles.tipoServicio}>{item.tipo_servicio}</Text>
                     <View style={styles.badgeWrap}>
-                      {!item.verificado && (
+                      {item.origen === 'propietario' && (
                         <Text style={styles.propietarioLabel}>Propietario</Text>
                       )}
-                      <View style={[styles.badge, item.verificado ? styles.badgeVerificado : styles.badgeEditar]}>
-                        <Text style={[styles.badgeTexto, { color: item.verificado ? '#22c55e' : colors.primario }]}>
-                          {item.verificado ? '✓ Verificado' : 'Editar →'}
+                      <View style={[styles.badge, item.origen === 'taller' ? styles.badgeVerificado : styles.badgeEditar]}>
+                        <Text style={[styles.badgeTexto, { color: item.origen === 'taller' ? '#22c55e' : colors.primario }]}>
+                          {item.origen === 'taller' ? '✓ Verificado por taller' : 'Editar →'}
                         </Text>
                       </View>
                     </View>
                   </View>
+
+                  {item.taller_nombre && (
+                    <Text style={styles.tallerNombre}>{item.taller_nombre}</Text>
+                  )}
 
                   {item.descripcion && (
                     <Text style={styles.descripcion}>{item.descripcion}</Text>
                   )}
 
                   <View style={styles.tarjetaFooter}>
-                    <View style={styles.footerBadge}>
-                      <Text>📅</Text>
+                    <View style={styles.footerIconRow}>
+                      <Icono name="calendar-outline" size={12} color={colors.textoSub} />
                       <Text style={styles.footerTexto}>
                         {new Date(item.fecha).toLocaleDateString('es-CO')}
                       </Text>
                     </View>
-                    {item.kilometraje && (
-                      <View style={styles.footerBadge}>
-                        <Text>📍</Text>
+                    {item.kilometraje ? (
+                      <View style={styles.footerIconRow}>
+                        <Icono name="speedometer-outline" size={12} color={colors.textoSub} />
                         <Text style={styles.footerTexto}>{item.kilometraje} km</Text>
                       </View>
-                    )}
-                    {item.costo && (
-                      <View style={styles.footerBadge}>
-                        <Text>💰</Text>
+                    ) : null}
+                    {item.costo ? (
+                      <View style={styles.footerIconRow}>
+                        <Icono name="cash-outline" size={12} color={colors.textoSub} />
                         <Text style={styles.costoTexto}>${item.costo.toLocaleString('es-CO')}</Text>
                       </View>
-                    )}
+                    ) : null}
                   </View>
                 </LinearGradient>
               </View>

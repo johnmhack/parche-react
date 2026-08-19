@@ -1,7 +1,7 @@
 export const colors = {
   // Fondos
-  bg: '#051838',
-  card: '#222B3A',
+  bg: '#020d1a',
+  card: '#0d1f35',
 
   // Acento principal
   primario: '#25FF7A',

@@ -9,10 +9,18 @@ import {
   Modal,
   Image,
 } from 'react-native'
-import { router, useFocusEffect } from 'expo-router'
+import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
+import { cargarUltimoServicio } from '../../lib/historial'
+import type { RegistroHistorial } from '../../lib/types'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
+import { Icono, IconoDocEstado } from '../../lib/iconos'
+import Ionicons from '@expo/vector-icons/Ionicons'
+
+const BANNER_VISTOS_KEY = 'anuncios_banner_vistos'
 
 type Moto = {
   id: string
@@ -101,8 +109,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  tuercasEmoji: {
-    fontSize: 16,
+  tuercasBadgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   tuercasNumero: {
     fontWeight: '700',
@@ -166,12 +176,11 @@ const styles = StyleSheet.create({
     color: '#000000',
     letterSpacing: 2,
   },
-  motoEmoji: {
-    fontSize: 56,
+  motoIconoWrap: {
     position: 'absolute',
     right: 16,
     bottom: 48,
-    transform: [{ scaleX: -1 }],
+    opacity: 0.25,
   },
   motoBottom: {
     marginTop: 40,
@@ -260,7 +269,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(180,0,255,0.1)',
   },
   accesoIcono: {
-    fontSize: 20,
+    // contenedor para Ionicons
   },
   accesoNombre: {
     fontSize: 13,
@@ -347,23 +356,117 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
+  alertaCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,68,68,0.35)',
+  },
+  alertaGradient: {
+    padding: 14,
+    gap: 4,
+  },
+  alertaTitulo: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ff6b6b',
+  },
+  alertaTexto: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18,
+  },
+  vacioCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.borde,
+  },
+  vacioGradient: {
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+  },
+  vacioIconoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: 'rgba(37,255,122,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vacioTitulo: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.blanco,
+    textAlign: 'center',
+  },
+  vacioSub: {
+    fontSize: 13,
+    color: colors.textoSub,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
+  vacioBoton: {
+    marginTop: 8,
+    borderRadius: 14,
+    overflow: 'hidden',
+    alignSelf: 'stretch',
+  },
+  vacioBotonGradient: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  vacioBotonTexto: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  servicioCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  servicioTipo: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.blanco,
+    marginBottom: 4,
+  },
+  servicioMeta: {
+    fontSize: 12,
+    color: colors.textoSub,
+    marginBottom: 6,
+  },
+  servicioBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(34,197,94,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.3)',
+  },
+  servicioBadgeTexto: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#22c55e',
+  },
 })
 
 export default function Home() {
   const [perfil, setPerfil] = useState<Perfil | null>(null)
   const [motos, setMotos] = useState<Moto[]>([])
   const [anuncios, setAnuncios] = useState<Anuncio[]>([])
-  const [cargando, setCargando] = useState(true)
   const [bannerVisible, setBannerVisible] = useState(false)
   const [bannerAnuncio, setBannerAnuncio] = useState<Anuncio | null>(null)
+  const [ultimoServicio, setUltimoServicio] = useState<RegistroHistorial | null>(null)
 
-  useFocusEffect(
-    useCallback(() => {
-      cargarDatos()
-    }, [])
-  )
-
-  async function cargarDatos() {
+  const cargarDatos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -374,7 +477,14 @@ export default function Home() {
     ])
 
     if (perfilData) setPerfil(perfilData)
-    if (motosData) setMotos(motosData)
+    if (motosData) {
+      setMotos(motosData)
+      const ultimo = await cargarUltimoServicio(motosData.map((m) => m.id))
+      setUltimoServicio(ultimo)
+    } else {
+      setMotos([])
+      setUltimoServicio(null)
+    }
     if (anunciosData) {
       const filtrados = anunciosData.filter(a =>
         a.dirigido_a === 'todos' || a.dirigido_a === (perfilData?.plan || 'free')
@@ -382,11 +492,33 @@ export default function Home() {
       setAnuncios(filtrados)
       const conImagen = filtrados.find(a => a.imagen_url)
       if (conImagen) {
-       setBannerAnuncio(conImagen)
-        setBannerVisible(true)
+        setBannerAnuncio(conImagen)
+        try {
+          const raw = await AsyncStorage.getItem(BANNER_VISTOS_KEY)
+          const vistos: string[] = raw ? JSON.parse(raw) : []
+          setBannerVisible(!vistos.includes(conImagen.id))
+        } catch {
+          setBannerVisible(true)
+        }
       }
-    }  
-    setCargando(false)
+    }
+  }, [])
+
+  const cargando = useRecargaEnFoco('home', cargarDatos)
+
+  async function cerrarBanner() {
+    setBannerVisible(false)
+    if (!bannerAnuncio) return
+    try {
+      const raw = await AsyncStorage.getItem(BANNER_VISTOS_KEY)
+      const vistos: string[] = raw ? JSON.parse(raw) : []
+      if (!vistos.includes(bannerAnuncio.id)) {
+        vistos.push(bannerAnuncio.id)
+        await AsyncStorage.setItem(BANNER_VISTOS_KEY, JSON.stringify(vistos))
+      }
+    } catch {
+      // ignorar error de storage
+    }
   }
 
   function diasRestantes(fecha: string | null) {
@@ -403,6 +535,27 @@ export default function Home() {
     if (dias <= 60) return colors.primario
     return '#22c55e'
   }
+
+  function alertasDocumentos() {
+    const alertas: string[] = []
+    for (const moto of motos) {
+      const diasSoat = diasRestantes(moto.soat_vencimiento)
+      const diasTecno = diasRestantes(moto.tecnicomecanica_vencimiento)
+      if (diasSoat !== null && diasSoat <= 30) {
+        alertas.push(
+          `SOAT de ${moto.placa} ${diasSoat <= 0 ? 'vencido' : `vence en ${diasSoat} días`}`
+        )
+      }
+      if (diasTecno !== null && diasTecno <= 30) {
+        alertas.push(
+          `Tecnomecánica de ${moto.placa} ${diasTecno <= 0 ? 'vencida' : `vence en ${diasTecno} días`}`
+        )
+      }
+    }
+    return alertas
+  }
+
+  const alertas = alertasDocumentos()
 
   if (cargando) return (
     <View style={styles.centered}>
@@ -434,9 +587,9 @@ export default function Home() {
           </LinearGradient>
           <TouchableOpacity
             style={styles.bannerCerrar}
-            onPress={() => setBannerVisible(false)}
+            onPress={cerrarBanner}
           >
-            <Text style={styles.bannerCerrarTexto}>✕</Text>
+            <Ionicons name="close" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -461,17 +614,62 @@ export default function Home() {
         <View style={styles.header}>
           <View>
             <Text style={styles.saludo}>
-              Hola, <Text style={styles.saludoNombre}>{perfil?.nombre?.split(' ')[0]}</Text> 👋
+              Hola, <Text style={styles.saludoNombre}>{perfil?.nombre?.split(' ')[0]}</Text>
             </Text>
             <Text style={styles.subtitulo}>Tu garaje digital</Text>
           </View>
           <View style={styles.tuercasBadge}>
-            <Text style={styles.tuercasEmoji}>🔩</Text>
-            <Text style={styles.tuercasNumero}>{perfil?.tuercas_acumuladas}</Text>
+            <View style={styles.tuercasBadgeInner}>
+              <Icono name="construct" size={16} color={colors.primario} />
+              <Text style={styles.tuercasNumero}>{perfil?.tuercas_acumuladas}</Text>
+            </View>
           </View>
         </View>
 
-        {motos.length > 0 && motos.map((moto) => {
+        {alertas.length > 0 && (
+          <View style={styles.alertaCard}>
+            <LinearGradient
+              colors={['rgba(255,68,68,0.12)', 'rgba(255,68,68,0.04)']}
+              style={styles.alertaGradient}
+            >
+              <Text style={styles.alertaTitulo}>Documentos por vencer</Text>
+              {alertas.map((a) => (
+                <Text key={a} style={styles.alertaTexto}>• {a}</Text>
+              ))}
+            </LinearGradient>
+          </View>
+        )}
+
+        {motos.length === 0 ? (
+          <View style={styles.vacioCard}>
+            <LinearGradient
+              colors={['rgba(37,255,122,0.08)', 'rgba(255,255,255,0.02)']}
+              style={styles.vacioGradient}
+            >
+              <View style={styles.vacioIconoWrap}>
+                <Icono name="speedometer" size={36} color={colors.primario} />
+              </View>
+              <Text style={styles.vacioTitulo}>Agrega tu primera moto</Text>
+              <Text style={styles.vacioSub}>
+                Registra tu moto para llevar el historial, alertas de SOAT y mucho más.
+              </Text>
+              <TouchableOpacity
+                style={styles.vacioBoton}
+                onPress={() => router.push('/agregar-moto')}
+              >
+                <LinearGradient
+                  colors={[colors.primario, colors.primarioOscuro]}
+                  style={styles.vacioBotonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.vacioBotonTexto}>+ Agregar moto</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        ) : (
+          motos.map((moto) => {
           const diasSoat = diasRestantes(moto.soat_vencimiento)
           const diasTecno = diasRestantes(moto.tecnicomecanica_vencimiento)
           return (
@@ -501,12 +699,14 @@ export default function Home() {
                   </View>
                 </View>
 
-                <Text style={styles.motoEmoji}>🏍️</Text>
+                <View style={styles.motoIconoWrap}>
+                  <Icono name="speedometer" size={56} color={colors.primario} />
+                </View>
 
                 <View style={styles.motoBottom}>
                   <View style={styles.docRow}>
                     <View style={[styles.docBadge, diasSoat !== null && diasSoat <= 0 && styles.docBadgePeligro, diasSoat !== null && diasSoat > 0 && diasSoat <= 30 && styles.docBadgeWarning]}>
-                      <Text style={styles.docIcon}>{diasSoat !== null && diasSoat <= 0 ? '🚨' : diasSoat !== null && diasSoat <= 30 ? '⚠️' : '✅'}</Text>
+                      <IconoDocEstado dias={diasSoat} />
                       <View>
                         <Text style={styles.docNombre}>SOAT</Text>
                         <Text style={[styles.docValor, { color: colorAlerta(diasSoat) }]}>
@@ -515,7 +715,7 @@ export default function Home() {
                       </View>
                     </View>
                     <View style={[styles.docBadge, diasTecno !== null && diasTecno <= 0 && styles.docBadgePeligro, diasTecno !== null && diasTecno > 0 && diasTecno <= 30 && styles.docBadgeWarning]}>
-                      <Text style={styles.docIcon}>{diasTecno !== null && diasTecno <= 0 ? '🚨' : diasTecno !== null && diasTecno <= 30 ? '⚠️' : '✅'}</Text>
+                      <IconoDocEstado dias={diasTecno} />
                       <View>
                         <Text style={styles.docNombre}>Tecno</Text>
                         <Text style={[styles.docValor, { color: colorAlerta(diasTecno) }]}>
@@ -528,7 +728,34 @@ export default function Home() {
               </View>
             </View>
           )
-        })}
+          })
+        )}
+
+        {ultimoServicio && (
+          <View style={styles.seccion}>
+            <View style={styles.seccionHeader}>
+              <Text style={styles.seccionTitulo}>Último servicio</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/historial')}>
+                <Text style={{ color: colors.primario, fontSize: 12, fontWeight: '600' }}>Ver todo →</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.servicioCard}
+              onPress={() => router.push('/(tabs)/historial')}
+            >
+              <Text style={styles.servicioTipo}>{ultimoServicio.tipo_servicio}</Text>
+              <Text style={styles.servicioMeta}>
+                {new Date(ultimoServicio.fecha).toLocaleDateString('es-CO')}
+                {ultimoServicio.taller_nombre ? ` · ${ultimoServicio.taller_nombre}` : ''}
+              </Text>
+              {ultimoServicio.origen === 'taller' && (
+                <View style={styles.servicioBadge}>
+                  <Text style={styles.servicioBadgeTexto}>✓ Verificado por taller</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.seccion}>
           <View style={styles.seccionHeader}>
@@ -537,25 +764,25 @@ export default function Home() {
           <View style={styles.accesosGrid}>
             <TouchableOpacity style={styles.accesoCard} onPress={() => router.push('/(tabs)/garaje')}>
               <View style={[styles.accesoIconWrap, styles.accesoNaranja]}>
-                <Text style={styles.accesoIcono}>🏍️</Text>
+                <Icono name="speedometer" size={22} color={colors.primario} />
               </View>
               <Text style={styles.accesoNombre}>Mi Garaje</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.accesoCard} onPress={() => router.push('/(tabs)/historial')}>
               <View style={[styles.accesoIconWrap, styles.accesoCyan]}>
-                <Text style={styles.accesoIcono}>📋</Text>
+                <Icono name="document-text" size={22} color={colors.secundario} />
               </View>
               <Text style={styles.accesoNombre}>Historial</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.accesoCard} onPress={() => router.push('/(tabs)/mapa')}>
               <View style={[styles.accesoIconWrap, styles.accesoVerde]}>
-                <Text style={styles.accesoIcono}>🗺️</Text>
+                <Icono name="map" size={22} color="#00E676" />
               </View>
               <Text style={styles.accesoNombre}>Talleres</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.accesoCard} onPress={() => router.push('/(tabs)/perfil')}>
               <View style={[styles.accesoIconWrap, styles.accesoPurpura]}>
-                <Text style={styles.accesoIcono}>🔩</Text>
+                <Icono name="construct" size={22} color="#b400ff" />
               </View>
               <Text style={styles.accesoNombre}>Mis Tuercas</Text>
             </TouchableOpacity>
@@ -565,7 +792,7 @@ export default function Home() {
         {anuncios.length > 0 && (
           <View style={styles.seccion}>
             <View style={styles.seccionHeader}>
-              <Text style={styles.seccionTitulo}>📢 Novedades</Text>
+              <Text style={styles.seccionTitulo}>Novedades</Text>
             </View>
             {anuncios.map((anuncio) => (
               <View key={anuncio.id} style={styles.anuncioCard}>
