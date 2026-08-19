@@ -16,6 +16,7 @@ import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/colors'
 import { Icono } from '../../lib/iconos'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { limitesPlan } from '../../lib/planes'
 
 type Perfil = {
   nombre: string
@@ -31,15 +32,6 @@ type Perfil = {
 type ResumenUso = {
   motos: number
   contactosSos: number
-}
-
-const LIMITES = {
-  free: { motos: 2, contactos: 1 },
-  premium: { motos: 4, contactos: 5 },
-} as const
-
-function limitesPlan(plan: string) {
-  return plan === 'premium' ? LIMITES.premium : LIMITES.free
 }
 
 function progresoNivel(tuercas: number, nivel: number) {
@@ -428,7 +420,7 @@ export default function Perfil() {
   const limites = limitesPlan(perfil?.plan || 'free')
   const { pct, faltan } = progresoNivel(perfil?.tuercas_acumuladas ?? 0, perfil?.nivel ?? 1)
   const pctMotos = Math.min(100, (uso.motos / limites.motos) * 100)
-  const pctContactos = Math.min(100, (uso.contactosSos / limites.contactos) * 100)
+  const pctContactos = Math.min(100, (uso.contactosSos / limites.contactosSos) * 100)
 
   return (
     <View style={styles.container}>
@@ -549,7 +541,7 @@ export default function Perfil() {
                     <Icono name="people-outline" size={18} color={colors.secundario} />
                     <Text style={styles.usoLabelTexto}>Contactos SOS</Text>
                   </View>
-                  <Text style={styles.usoValor}>{uso.contactosSos} / {limites.contactos}</Text>
+                  <Text style={styles.usoValor}>{uso.contactosSos} / {limites.contactosSos}</Text>
                 </View>
                 <View style={styles.progresoBar}>
                   <View style={[styles.progresoFill, { width: `${pctContactos}%`, backgroundColor: colors.secundario }]} />

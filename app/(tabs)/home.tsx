@@ -26,6 +26,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 const BANNER_VISTOS_KEY = 'anuncios_banner_vistos'
 const ANCHO_PANTALLA = Dimensions.get('window').width
 const ANCHO_CARRUSEL = ANCHO_PANTALLA - 40
+const ALERTAS_VISIBLES = 2
 
 type Moto = {
   id: string
@@ -49,6 +50,14 @@ type Anuncio = {
   mensaje: string
   dirigido_a: string
   imagen_url: string | null
+}
+
+type AlertaDoc = {
+  id: string
+  tipo: 'SOAT' | 'Tecno'
+  placa: string
+  dias: number
+  vencido: boolean
 }
 
 const styles = StyleSheet.create({
@@ -389,26 +398,113 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-  alertaCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,68,68,0.35)',
+  alertasWrap: {
+    marginBottom: 20,
+    gap: 10,
   },
-  alertaGradient: {
-    padding: 14,
+  alertasHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    marginLeft: 4,
+    gap: 12,
+  },
+  alertasHeaderIzq: {
+    flex: 1,
     gap: 4,
   },
-  alertaTitulo: {
+  alertasHeaderFila: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  alertasHeaderTexto: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  alertasResumen: {
+    fontSize: 12,
+    color: colors.textoSub,
+    marginLeft: 24,
+  },
+  alertasBadge: {
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    borderWidth: 1,
+  },
+  alertasBadgeTexto: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  alertasExpandirBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: 2,
+  },
+  alertasExpandirTexto: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primario,
+  },
+  alertaItem: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  alertaItemGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  alertaIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  alertaContenido: {
+    flex: 1,
+    gap: 2,
+  },
+  alertaFilaTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  alertaTipo: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#ff6b6b',
+    color: '#FFFFFF',
   },
-  alertaTexto: {
+  alertaPlaca: {
+    backgroundColor: '#FFD600',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  alertaPlacaTexto: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#000',
+    letterSpacing: 1,
+  },
+  alertaDetalle: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 18,
+    lineHeight: 17,
   },
   vacioCard: {
     borderRadius: 20,
@@ -499,6 +595,7 @@ export default function Home() {
   const [bannerAnuncio, setBannerAnuncio] = useState<Anuncio | null>(null)
   const [ultimoServicio, setUltimoServicio] = useState<RegistroHistorial | null>(null)
   const [motoIndex, setMotoIndex] = useState(0)
+  const [alertasExpandidas, setAlertasExpandidas] = useState(false)
 
   const cargarDatos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -645,26 +742,105 @@ export default function Home() {
     )
   }
 
-  function alertasDocumentos() {
-    const alertas: string[] = []
+  function alertasDocumentos(): AlertaDoc[] {
+    const alertas: AlertaDoc[] = []
     for (const moto of motos) {
       const diasSoat = diasRestantes(moto.soat_vencimiento)
       const diasTecno = diasRestantes(moto.tecnicomecanica_vencimiento)
       if (diasSoat !== null && diasSoat <= 30) {
-        alertas.push(
-          `SOAT de ${moto.placa} ${diasSoat <= 0 ? 'vencido' : `vence en ${diasSoat} días`}`
-        )
+        alertas.push({
+          id: `${moto.id}-soat`,
+          tipo: 'SOAT',
+          placa: moto.placa,
+          dias: diasSoat,
+          vencido: diasSoat <= 0,
+        })
       }
       if (diasTecno !== null && diasTecno <= 30) {
-        alertas.push(
-          `Tecnomecánica de ${moto.placa} ${diasTecno <= 0 ? 'vencida' : `vence en ${diasTecno} días`}`
-        )
+        alertas.push({
+          id: `${moto.id}-tecno`,
+          tipo: 'Tecno',
+          placa: moto.placa,
+          dias: diasTecno,
+          vencido: diasTecno <= 0,
+        })
       }
     }
     return alertas
   }
 
-  const alertas = alertasDocumentos()
+  function ordenarAlertas(alertas: AlertaDoc[]) {
+    return [...alertas].sort((a, b) => {
+      if (a.vencido !== b.vencido) return a.vencido ? -1 : 1
+      return a.dias - b.dias
+    })
+  }
+
+  function resumenAlertas(alertas: AlertaDoc[]) {
+    const vencidos = alertas.filter((a) => a.vencido).length
+    const porVencer = alertas.length - vencidos
+    if (vencidos > 0 && porVencer > 0) {
+      return `${vencidos} vencido${vencidos > 1 ? 's' : ''} · ${porVencer} por vencer`
+    }
+    if (vencidos > 0) return `${vencidos} documento${vencidos > 1 ? 's' : ''} vencido${vencidos > 1 ? 's' : ''}`
+    return `${alertas.length} documento${alertas.length > 1 ? 's' : ''} por vencer`
+  }
+
+  function renderAlertaDoc(alerta: AlertaDoc) {
+    const color = colorAlertaDoc(alerta)
+    return (
+      <View
+        key={alerta.id}
+        style={[styles.alertaItem, { borderColor: `${color}35` }]}
+      >
+        <LinearGradient
+          colors={[`${color}14`, 'rgba(255,255,255,0.02)']}
+          style={styles.alertaItemGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={[styles.alertaIconWrap, { backgroundColor: `${color}12`, borderColor: `${color}30` }]}>
+            <Ionicons
+              name={alerta.vencido ? 'close-circle' : 'warning'}
+              size={22}
+              color={color}
+            />
+          </View>
+          <View style={styles.alertaContenido}>
+            <View style={styles.alertaFilaTop}>
+              <Text style={styles.alertaTipo}>{alerta.tipo}</Text>
+              <View style={styles.alertaPlaca}>
+                <Text style={styles.alertaPlacaTexto}>{alerta.placa}</Text>
+              </View>
+            </View>
+            <Text style={[styles.alertaDetalle, { color: `${color}cc` }]}>
+              {textoAlertaDoc(alerta)}
+            </Text>
+          </View>
+        </LinearGradient>
+      </View>
+    )
+  }
+
+  function colorAlertaDoc(alerta: AlertaDoc) {
+    if (alerta.vencido) return '#ff6b6b'
+    if (alerta.dias <= 7) return '#ff6b6b'
+    return colors.primario
+  }
+
+  function textoAlertaDoc(alerta: AlertaDoc) {
+    if (alerta.vencido) return alerta.tipo === 'SOAT' ? 'SOAT vencido — renueva ya' : 'Tecnomecánica vencida — renueva ya'
+    if (alerta.dias === 1) return 'Vence mañana'
+    return `Vence en ${alerta.dias} días`
+  }
+
+  const alertasOrdenadas = ordenarAlertas(alertasDocumentos())
+  const hayMasAlertas = alertasOrdenadas.length > ALERTAS_VISIBLES
+  const alertasVisibles = alertasExpandidas || !hayMasAlertas
+    ? alertasOrdenadas
+    : alertasOrdenadas.slice(0, ALERTAS_VISIBLES)
+  const peorAlerta = alertasOrdenadas[0]
+  const colorPeor = peorAlerta ? colorAlertaDoc(peorAlerta) : colors.primario
 
   if (cargando) return (
     <View style={styles.centered}>
@@ -735,17 +911,40 @@ export default function Home() {
           </View>
         </View>
 
-        {alertas.length > 0 && (
-          <View style={styles.alertaCard}>
-            <LinearGradient
-              colors={['rgba(255,68,68,0.12)', 'rgba(255,68,68,0.04)']}
-              style={styles.alertaGradient}
-            >
-              <Text style={styles.alertaTitulo}>Documentos por vencer</Text>
-              {alertas.map((a) => (
-                <Text key={a} style={styles.alertaTexto}>• {a}</Text>
-              ))}
-            </LinearGradient>
+        {alertasOrdenadas.length > 0 && (
+          <View style={styles.alertasWrap}>
+            <View style={styles.alertasHeader}>
+              <View style={styles.alertasHeaderIzq}>
+                <View style={styles.alertasHeaderFila}>
+                  <Ionicons name="notifications" size={16} color={colorPeor} />
+                  <Text style={styles.alertasHeaderTexto}>Documentos por vencer</Text>
+                </View>
+                <Text style={styles.alertasResumen}>{resumenAlertas(alertasOrdenadas)}</Text>
+              </View>
+              <View style={[styles.alertasBadge, { backgroundColor: `${colorPeor}18`, borderColor: `${colorPeor}40` }]}>
+                <Text style={[styles.alertasBadgeTexto, { color: colorPeor }]}>
+                  {alertasOrdenadas.length}
+                </Text>
+              </View>
+            </View>
+            {alertasVisibles.map(renderAlertaDoc)}
+            {hayMasAlertas && (
+              <TouchableOpacity
+                style={styles.alertasExpandirBtn}
+                onPress={() => setAlertasExpandidas(!alertasExpandidas)}
+              >
+                <Text style={styles.alertasExpandirTexto}>
+                  {alertasExpandidas
+                    ? 'Ver menos'
+                    : `Ver ${alertasOrdenadas.length - ALERTAS_VISIBLES} alerta${alertasOrdenadas.length - ALERTAS_VISIBLES > 1 ? 's' : ''} más`}
+                </Text>
+                <Ionicons
+                  name={alertasExpandidas ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={colors.primario}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 

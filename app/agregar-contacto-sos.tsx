@@ -5,13 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
 import { colors } from '../lib/colors'
+import { alertaLimiteContactosSos, limitesPlan } from '../lib/planes'
+import ModalAlerta from '../components/ModalAlerta'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const styles = StyleSheet.create({
@@ -108,16 +109,37 @@ export default function AgregarContactoSOS() {
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [cargando, setCargando] = useState(false)
+  const [alertaModal, setAlertaModal] = useState<{ titulo: string; mensaje: string; variante: 'error' | 'exito' | 'premium' } | null>(null)
 
   async function handleAgregar() {
     if (!nombre || !telefono) {
-      Alert.alert('Error', 'Nombre y teléfono son obligatorios')
+      setAlertaModal({
+        titulo: 'Datos incompletos',
+        mensaje: 'Nombre y teléfono son obligatorios.',
+        variante: 'error',
+      })
       return
     }
 
     setCargando(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setCargando(false)
+      return
+    }
+
+    const [{ data: perfil }, { count }] = await Promise.all([
+      supabase.from('perfiles').select('plan').eq('id', user.id).single(),
+      supabase.from('contactos_sos').select('*', { count: 'exact', head: true }).eq('usuario_id', user.id),
+    ])
+
+    const limite = limitesPlan(perfil?.plan).contactosSos
+    if ((count ?? 0) >= limite) {
+      const { titulo, mensaje } = alertaLimiteContactosSos(perfil?.plan)
+      setAlertaModal({ titulo, mensaje, variante: 'premium' })
+      setCargando(false)
+      return
+    }
 
     const { error } = await supabase.from('contactos_sos').insert({
       usuario_id: user.id,
@@ -126,17 +148,34 @@ export default function AgregarContactoSOS() {
     })
 
     if (error) {
-      Alert.alert('Error', error.message)
+      setAlertaModal({ titulo: 'Error', mensaje: error.message, variante: 'error' })
       setCargando(false)
       return
     }
 
-    Alert.alert('¡Listo!', 'Contacto agregado')
-    router.back()
+    setAlertaModal({
+      titulo: 'Contacto agregado',
+      mensaje: `${nombre} recibirá tu ubicación en emergencias.`,
+      variante: 'exito',
+    })
+    setCargando(false)
+  }
+
+  function cerrarAlerta() {
+    const volver = alertaModal?.variante === 'exito' || alertaModal?.variante === 'premium'
+    setAlertaModal(null)
+    if (volver) router.back()
   }
 
   return (
     <View style={styles.container}>
+      <ModalAlerta
+        visible={!!alertaModal}
+        titulo={alertaModal?.titulo ?? ''}
+        mensaje={alertaModal?.mensaje}
+        variante={alertaModal?.variante}
+        onCerrar={cerrarAlerta}
+      />
       <LinearGradient
         colors={['rgba(255,68,68,0.06)', 'transparent']}
         style={styles.ambientTop}

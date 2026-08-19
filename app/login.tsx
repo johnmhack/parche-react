@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../lib/supabase'
 import { colors } from '../lib/colors'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import ModalAlerta from '../components/ModalAlerta'
 
 const styles = StyleSheet.create({
   container: {
@@ -243,11 +243,16 @@ export default function Login() {
   const [cargando, setCargando] = useState(false)
   const [recordarme, setRecordarme] = useState(false)
   const [mostrarPassword, setMostrarPassword] = useState(false)
+  const [alertaModal, setAlertaModal] = useState<{ titulo: string; mensaje: string; variante?: 'error' | 'info' } | null>(null)
+
+  function mostrarError(mensaje: string) {
+    setAlertaModal({ titulo: 'No se pudo entrar', mensaje, variante: 'error' })
+  }
 
   async function handleLogin() {
     const correo = email.trim().toLowerCase()
     if (!correo || !password) {
-      Alert.alert('Error', 'Completa todos los campos')
+      mostrarError('Completa correo y contraseña para continuar.')
       return
     }
     setCargando(true)
@@ -260,25 +265,22 @@ export default function Login() {
       if (error) {
         const mensaje =
           error.message === 'Invalid login credentials'
-            ? 'Correo o contraseña incorrectos'
+            ? 'Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.'
             : error.message === 'Email not confirmed'
               ? 'Debes confirmar tu correo antes de entrar. Revisa tu bandeja.'
               : error.message
-        Alert.alert('Error', mensaje)
+        mostrarError(mensaje)
         return
       }
 
       if (!data.session) {
-        Alert.alert(
-          'Error',
-          'No se pudo iniciar sesión. Si acabas de registrarte, confirma tu correo en Supabase o revisa tu email.'
-        )
+        mostrarError('No se pudo iniciar sesión. Si acabas de registrarte, confirma tu correo.')
         return
       }
 
       router.replace('/(tabs)/home')
     } catch {
-      Alert.alert('Error', 'No se pudo conectar. Revisa tu internet e intenta de nuevo.')
+      mostrarError('No se pudo conectar. Revisa tu internet e intenta de nuevo.')
     } finally {
       setCargando(false)
     }
@@ -286,6 +288,13 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
+      <ModalAlerta
+        visible={!!alertaModal}
+        titulo={alertaModal?.titulo ?? ''}
+        mensaje={alertaModal?.mensaje}
+        variante={alertaModal?.variante ?? 'error'}
+        onCerrar={() => setAlertaModal(null)}
+      />
       <LinearGradient
         colors={['#010e1a', '#020d1a', '#01120f']}
         style={styles.gradientBg}

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   FlatList,
   ScrollView,
@@ -16,6 +15,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
 import { colors } from '../../lib/colors'
+import { Icono } from '../../lib/iconos'
+import { alertaLimiteContactosSos, limitesPlan } from '../../lib/planes'
+import ModalAlerta, { BotonModalAlerta } from '../../components/ModalAlerta'
+
+type AlertaModal = {
+  titulo: string
+  mensaje?: string
+  variante?: 'info' | 'exito' | 'error' | 'premium'
+  botones?: BotonModalAlerta[]
+}
 
 type Contacto = {
   id: string
@@ -42,7 +51,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
     marginBottom: 32,
   },
   titulo: {
@@ -51,13 +60,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  tituloRojo: {
+  tituloAcento: {
     color: '#ff4444',
   },
   subtitulo: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.4)',
     marginTop: 4,
+    lineHeight: 18,
   },
   // Botón SOS
   sosWrap: {
@@ -132,9 +142,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,107,26,0.1)',
+    backgroundColor: 'rgba(37,255,122,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(255,107,26,0.3)',
+    borderColor: colors.borde,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -143,6 +153,14 @@ const styles = StyleSheet.create({
     color: colors.primario,
     fontSize: 12,
     fontWeight: '700',
+  },
+  agregarBtnDisabled: {
+    opacity: 0.45,
+  },
+  limiteTexto: {
+    fontSize: 12,
+    color: colors.textoSub,
+    fontWeight: '600',
   },
   vacio: {
     color: 'rgba(255,255,255,0.3)',
@@ -206,10 +224,12 @@ const styles = StyleSheet.create({
 
 export default function SOS() {
   const [contactos, setContactos] = useState<Contacto[]>([])
+  const [plan, setPlan] = useState('free')
   const [enviando, setEnviando] = useState(false)
   const [progreso, setProgreso] = useState(0)
   const [enCooldown, setEnCooldown] = useState(false)
   const [minutosRestantes, setMinutosRestantes] = useState(0)
+  const [alertaModal, setAlertaModal] = useState<AlertaModal | null>(null)
   const intervalRef = useRef<any>(null)
   const progresoRef = useRef<any>(null)
 
@@ -217,11 +237,12 @@ export default function SOS() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const { data } = await supabase
-      .from('contactos_sos')
-      .select('*')
-      .eq('usuario_id', user.id)
+    const [{ data: perfil }, { data }] = await Promise.all([
+      supabase.from('perfiles').select('plan').eq('id', user.id).single(),
+      supabase.from('contactos_sos').select('*').eq('usuario_id', user.id),
+    ])
 
+    setPlan(perfil?.plan ?? 'free')
     setContactos(data || [])
   }, [])
 
@@ -260,7 +281,11 @@ export default function SOS() {
 
   async function handleSOS() {
     if (contactos.length === 0) {
-      Alert.alert('Sin contactos', 'Agrega contactos de emergencia primero')
+      setAlertaModal({
+        titulo: 'Sin contactos',
+        mensaje: 'Agrega al menos un contacto de emergencia antes de pedir ayuda.',
+        variante: 'info',
+      })
       return
     }
     await enviarSOS()
@@ -274,7 +299,11 @@ export default function SOS() {
 
     const { status } = await Location.requestForegroundPermissionsAsync()
     if (status !== 'granted') {
-      Alert.alert('Error', 'Necesitamos acceso a tu ubicación')
+      setAlertaModal({
+        titulo: 'Ubicación requerida',
+        mensaje: 'Necesitamos acceso a tu ubicación para enviar tu posición a tus contactos.',
+        variante: 'error',
+      })
       setEnviando(false)
       return
     }
@@ -291,34 +320,60 @@ export default function SOS() {
     })
 
     if (error) {
-      Alert.alert('Error', error.message)
+      setAlertaModal({ titulo: 'No se pudo enviar', mensaje: error.message, variante: 'error' })
     } else {
-      Alert.alert('✅ SOS Enviado', 'Tu ubicación fue enviada a tus contactos de emergencia.')
+      setAlertaModal({
+        titulo: 'Ayuda enviada',
+        mensaje: 'Tu ubicación fue compartida con tus contactos de emergencia.',
+        variante: 'exito',
+      })
     }
 
     setEnviando(false)
   }
 
   function agregarContacto() {
+    const limite = limitesPlan(plan).contactosSos
+    if (contactos.length >= limite) {
+      const { titulo, mensaje } = alertaLimiteContactosSos(plan)
+      setAlertaModal({ titulo, mensaje, variante: 'premium' })
+      return
+    }
     router.push('/agregar-contacto-sos')
   }
 
-  async function eliminarContacto(id: string) {
-    Alert.alert('Eliminar contacto', '¿Estás seguro?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.from('contactos_sos').delete().eq('id', id)
-          cargarContactos()
-        }
-      }
-    ])
+  function eliminarContacto(id: string) {
+    setAlertaModal({
+      titulo: 'Eliminar contacto',
+      mensaje: 'Este contacto dejará de recibir tus alertas de emergencia.',
+      variante: 'error',
+      botones: [
+        { texto: 'Cancelar', estilo: 'secundario' },
+        {
+          texto: 'Eliminar',
+          estilo: 'destructivo',
+          onPress: async () => {
+            await supabase.from('contactos_sos').delete().eq('id', id)
+            cargarContactos()
+          },
+        },
+      ],
+    })
   }
+
+  const limiteContactos = limitesPlan(plan).contactosSos
+  const enLimiteContactos = contactos.length >= limiteContactos
 
   return (
     <View style={styles.container}>
+      <ModalAlerta
+        visible={!!alertaModal}
+        titulo={alertaModal?.titulo ?? ''}
+        mensaje={alertaModal?.mensaje}
+        variante={alertaModal?.variante}
+        botones={alertaModal?.botones}
+        onCerrar={() => setAlertaModal(null)}
+      />
       <LinearGradient
         colors={['rgba(255,68,68,0.06)', 'transparent']}
         style={styles.ambientTop}
@@ -331,9 +386,11 @@ export default function SOS() {
 
         <View style={styles.header}>
           <Text style={styles.titulo}>
-            <Text style={styles.tituloRojo}>SOS</Text> 🆘
+            Ayuda en <Text style={styles.tituloAcento}>ruta</Text>
           </Text>
-          <Text style={styles.subtitulo}>Emergencias en ruta</Text>
+          <Text style={styles.subtitulo}>
+            Mantén presionado 3 segundos para enviar tu ubicación GPS a tus contactos.
+          </Text>
         </View>
 
         {/* Botón SOS */}
@@ -355,7 +412,7 @@ export default function SOS() {
                     <ActivityIndicator color="#fff" size="large" />
                   ) : enCooldown ? (
                     <>
-                      <Text style={styles.botonSOSTexto}>🔒</Text>
+                      <Icono name="lock-closed" size={28} color="#fff" />
                       <Text style={styles.botonSOSSubtexto}>{minutosRestantes} min</Text>
                     </>
                   ) : (
@@ -374,13 +431,21 @@ export default function SOS() {
         <View style={styles.seccion}>
           <View style={styles.seccionHeader}>
             <Text style={styles.seccionTitulo}>Contactos de emergencia</Text>
-            <TouchableOpacity style={styles.agregarBtn} onPress={agregarContacto}>
-              <Text style={styles.agregarTexto}>+ Agregar</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={styles.limiteTexto}>
+                {contactos.length} / {limiteContactos}
+              </Text>
+              <TouchableOpacity
+                style={[styles.agregarBtn, enLimiteContactos && styles.agregarBtnDisabled]}
+                onPress={agregarContacto}
+              >
+                <Text style={styles.agregarTexto}>+ Agregar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {cargando ? (
-            <ActivityIndicator color="#f97316" />
+            <ActivityIndicator color={colors.primario} />
           ) : contactos.length === 0 ? (
             <Text style={styles.vacio}>No tienes contactos de emergencia</Text>
           ) : (
