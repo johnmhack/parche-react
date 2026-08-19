@@ -35,6 +35,10 @@ export function setCache(key: string, value: unknown) {
   datosCache.set(key, value)
 }
 
+export function borrarCache(key: string) {
+  datosCache.delete(key)
+}
+
 export function reiniciarCacheCarga() {
   pantallasListas.clear()
   sesionCache = null

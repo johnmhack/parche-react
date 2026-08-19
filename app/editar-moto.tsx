@@ -8,15 +8,16 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  Modal,
-  Platform,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import { supabase } from '../lib/supabase'
 import { colors } from '../lib/colors'
+import { borrarCache } from '../lib/carga'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import SelectorFecha from '../components/SelectorFecha'
+
+const MARCAS_COMUNES = ['Honda', 'Yamaha', 'Suzuki', 'Bajaj', 'AKT', 'KTM', 'Hero', 'TVS']
 
 const styles = StyleSheet.create({
   container: {
@@ -70,71 +71,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  inputFocus: {
-    borderColor: 'rgba(255,107,26,0.5)',
-  },
-  // Date picker button
-  dateBtn: {
-    width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 14,
-    padding: 16,
+  chipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 16,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  dateBtnActivo: {
-    borderColor: 'rgba(255,107,26,0.4)',
-    backgroundColor: 'rgba(255,107,26,0.06)',
+  chipActivo: {
+    backgroundColor: 'rgba(37,255,122,0.12)',
+    borderColor: 'rgba(37,255,122,0.35)',
   },
-  dateBtnTexto: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.35)',
+  chipTexto: {
+    color: colors.textoSub,
+    fontSize: 13,
+    fontWeight: '600',
   },
-  dateBtnTextoActivo: {
-    color: '#FFFFFF',
-  },
-  dateBtnIcono: {
-    fontSize: 16,
-  },
-  // Modal date picker
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderBottomWidth: 0,
-  },
-  modalGradient: {
-    padding: 20,
-    paddingBottom: 36,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  modalTitulo: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  modalConfirmar: {
+  chipTextoActivo: {
     color: colors.primario,
-    fontSize: 15,
-    fontWeight: '700',
   },
-  // Botones
   botonGuardar: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -182,21 +144,6 @@ const styles = StyleSheet.create({
   },
 })
 
-function formatearFecha(fecha: string) {
-  if (!fecha) return null
-  const d = new Date(fecha + 'T12:00:00')
-  return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
-}
-
-function fechaADate(fecha: string) {
-  if (!fecha) return new Date()
-  return new Date(fecha + 'T12:00:00')
-}
-
-function dateAFecha(date: Date) {
-  return date.toISOString().split('T')[0]
-}
-
 export default function EditarMoto() {
   const { motoId } = useLocalSearchParams<{ motoId: string }>()
   const [placa, setPlaca] = useState('')
@@ -210,12 +157,6 @@ export default function EditarMoto() {
   const [tecno, setTecno] = useState('')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
-
-  // Date picker state
-  const [mostrarPickerSoat, setMostrarPickerSoat] = useState(false)
-  const [mostrarPickerTecno, setMostrarPickerTecno] = useState(false)
-  const [tempDateSoat, setTempDateSoat] = useState(new Date())
-  const [tempDateTecno, setTempDateTecno] = useState(new Date())
 
   useEffect(() => {
     cargarMoto()
@@ -243,14 +184,20 @@ export default function EditarMoto() {
     setKilometraje(data.kilometraje_actual?.toString() || '')
     setSoat(data.soat_vencimiento || '')
     setTecno(data.tecnicomecanica_vencimiento || '')
-    if (data.soat_vencimiento) setTempDateSoat(fechaADate(data.soat_vencimiento))
-    if (data.tecnicomecanica_vencimiento) setTempDateTecno(fechaADate(data.tecnicomecanica_vencimiento))
     setCargando(false)
   }
 
   async function handleGuardar() {
-    if (!placa || !marca || !modelo || !anio) {
+    const placaLimpia = placa.trim().toUpperCase()
+    const anioNum = parseInt(anio, 10)
+
+    if (!placaLimpia || !marca.trim() || !modelo.trim() || !anio) {
       Alert.alert('Error', 'Placa, marca, modelo y año son obligatorios')
+      return
+    }
+
+    if (Number.isNaN(anioNum) || anioNum < 1990 || anioNum > new Date().getFullYear() + 1) {
+      Alert.alert('Error', 'Ingresa un año válido')
       return
     }
 
@@ -259,27 +206,31 @@ export default function EditarMoto() {
     const { error } = await supabase
       .from('motos')
       .update({
-        placa: placa.toUpperCase(),
-        marca,
-        modelo,
-        anio: parseInt(anio),
-        cilindraje: cilindraje ? parseInt(cilindraje) : null,
-        color,
-        kilometraje_actual: kilometraje ? parseInt(kilometraje) : 0,
+        placa: placaLimpia,
+        marca: marca.trim(),
+        modelo: modelo.trim(),
+        anio: anioNum,
+        cilindraje: cilindraje ? parseInt(cilindraje, 10) : null,
+        color: color.trim() || null,
+        kilometraje_actual: kilometraje ? parseInt(kilometraje, 10) : 0,
         soat_vencimiento: soat || null,
         tecnicomecanica_vencimiento: tecno || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', motoId)
 
+    setGuardando(false)
+
     if (error) {
       Alert.alert('Error', error.message)
-      setGuardando(false)
       return
     }
 
-    Alert.alert('¡Listo!', 'Moto actualizada')
-    router.back()
+    borrarCache('garaje')
+    borrarCache('home')
+    Alert.alert('¡Listo!', 'Moto actualizada', [
+      { text: 'OK', onPress: () => router.back() },
+    ])
   }
 
   async function handleEliminar() {
@@ -296,22 +247,28 @@ export default function EditarMoto() {
               .from('motos')
               .update({ activa: false })
               .eq('id', motoId)
-            if (!error) router.replace('/(tabs)/garaje')
-          }
-        }
+            if (!error) {
+              borrarCache('garaje')
+              borrarCache('home')
+              router.replace('/(tabs)/garaje')
+            }
+          },
+        },
       ]
     )
   }
 
-  if (cargando) return (
-    <View style={styles.centered}>
-      <ActivityIndicator color="#f97316" size="large" />
-    </View>
-  )
+  if (cargando) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={colors.primario} size="large" />
+      </View>
+    )
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}> 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         <TouchableOpacity onPress={() => router.back()} style={styles.back}>
           <Text style={styles.backTexto}>← Volver</Text>
@@ -321,7 +278,6 @@ export default function EditarMoto() {
           Editar <Text style={styles.tituloNaranja}>Moto</Text>
         </Text>
 
-        {/* Datos básicos */}
         <Text style={styles.seccionLabel}>Datos básicos</Text>
 
         <Text style={styles.label}>Placa *</Text>
@@ -332,13 +288,25 @@ export default function EditarMoto() {
           value={placa}
           onChangeText={setPlaca}
           autoCapitalize="characters"
+          maxLength={7}
         />
 
         <Text style={styles.label}>Marca *</Text>
+        <View style={styles.chipsWrap}>
+          {MARCAS_COMUNES.map((m) => (
+            <TouchableOpacity
+              key={m}
+              style={[styles.chip, marca === m && styles.chipActivo]}
+              onPress={() => setMarca(m)}
+            >
+              <Text style={[styles.chipTexto, marca === m && styles.chipTextoActivo]}>{m}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         <TextInput
           style={styles.input}
           placeholderTextColor="rgba(255,255,255,0.25)"
-          placeholder="Honda, Yamaha..."
+          placeholder="O escribe otra marca..."
           value={marca}
           onChangeText={setMarca}
         />
@@ -347,7 +315,7 @@ export default function EditarMoto() {
         <TextInput
           style={styles.input}
           placeholderTextColor="rgba(255,255,255,0.25)"
-          placeholder="CB190, FZ25..."
+          placeholder="CB190R, FZ25..."
           value={modelo}
           onChangeText={setModelo}
         />
@@ -360,6 +328,7 @@ export default function EditarMoto() {
           value={anio}
           onChangeText={setAnio}
           keyboardType="numeric"
+          maxLength={4}
         />
 
         <View style={styles.divider} />
@@ -379,7 +348,7 @@ export default function EditarMoto() {
         <TextInput
           style={styles.input}
           placeholderTextColor="rgba(255,255,255,0.25)"
-          placeholder="Rojo, Negro..."
+          placeholder="Negro, rojo..."
           value={color}
           onChangeText={setColor}
         />
@@ -397,37 +366,20 @@ export default function EditarMoto() {
         <View style={styles.divider} />
         <Text style={styles.seccionLabel}>Documentos</Text>
 
-        {/* SOAT picker */}
-        <Text style={styles.label}>Vencimiento SOAT</Text>
-        <TouchableOpacity
-          style={[styles.dateBtn, soat && styles.dateBtnActivo]}
-          onPress={() => {
-            setTempDateSoat(soat ? fechaADate(soat) : new Date())
-            setMostrarPickerSoat(true)
-          }}
-        >
-          <Text style={[styles.dateBtnTexto, soat && styles.dateBtnTextoActivo]}>
-            {soat ? formatearFecha(soat) : 'Seleccionar fecha'}
-          </Text>
-          <Text style={styles.dateBtnIcono}>📅</Text>
-        </TouchableOpacity>
+        <SelectorFecha
+          label="Vencimiento SOAT"
+          value={soat}
+          onChange={setSoat}
+          tituloModal="Vencimiento SOAT"
+        />
 
-        {/* Tecno picker */}
-        <Text style={styles.label}>Vencimiento Tecnomecánica</Text>
-        <TouchableOpacity
-          style={[styles.dateBtn, tecno && styles.dateBtnActivo]}
-          onPress={() => {
-            setTempDateTecno(tecno ? fechaADate(tecno) : new Date())
-            setMostrarPickerTecno(true)
-          }}
-        >
-          <Text style={[styles.dateBtnTexto, tecno && styles.dateBtnTextoActivo]}>
-            {tecno ? formatearFecha(tecno) : 'Seleccionar fecha'}
-          </Text>
-          <Text style={styles.dateBtnIcono}>📅</Text>
-        </TouchableOpacity>
+        <SelectorFecha
+          label="Vencimiento Tecnomecánica"
+          value={tecno}
+          onChange={setTecno}
+          tituloModal="Vencimiento Tecnomecánica"
+        />
 
-        {/* Botón guardar */}
         <TouchableOpacity style={styles.botonGuardar} onPress={handleGuardar} disabled={guardando}>
           <LinearGradient
             colors={[colors.primario, colors.primarioOscuro]}
@@ -446,79 +398,7 @@ export default function EditarMoto() {
           <Text style={styles.botonEliminarTexto}>Eliminar moto</Text>
         </TouchableOpacity>
 
-        {/* Modal SOAT */}
-        <Modal visible={mostrarPickerSoat} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <LinearGradient
-                colors={['#1a1a2e', '#0d0d1a']}
-                style={styles.modalGradient}
-              >
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitulo}>Vencimiento SOAT</Text>
-                  <TouchableOpacity onPress={() => {
-                    setSoat(dateAFecha(tempDateSoat))
-                    setMostrarPickerSoat(false)
-                  }}>
-                    <Text style={styles.modalConfirmar}>Confirmar</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempDateSoat}
-                  mode="date"
-                  display="spinner"
-                  onChange={(event, date) => {
-                    if (event.type === 'set' && date) {
-                      setSoat(dateAFecha(date))
-                    }
-                    setMostrarPickerSoat(false)
-                  }}
-                  minimumDate={new Date()}
-                  themeVariant="dark"
-                  locale="es-CO"
-                />
-              </LinearGradient>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Modal Tecno */}
-        <Modal visible={mostrarPickerTecno} transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <LinearGradient
-                colors={['#1a1a2e', '#0d0d1a']}
-                style={styles.modalGradient}
-              >
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitulo}>Vencimiento Tecnomecánica</Text>
-                  <TouchableOpacity onPress={() => {
-                    setTecno(dateAFecha(tempDateTecno))
-                    setMostrarPickerTecno(false)
-                  }}>
-                    <Text style={styles.modalConfirmar}>Confirmar</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={tempDateTecno}
-                  mode="date"
-                  display="spinner"
-                  onChange={(event, date) => {
-                    if (event.type === 'set' && date) {
-                      setTecno(dateAFecha(date))
-                    }
-                    setMostrarPickerTecno(false)
-                  }}
-                  minimumDate={new Date()}
-                  themeVariant="dark"
-                  locale="es-CO"
-                />
-              </LinearGradient>
-            </View>
-          </View>
-        </Modal>
-
       </ScrollView>
-    </SafeAreaView>  
+    </SafeAreaView>
   )
 }

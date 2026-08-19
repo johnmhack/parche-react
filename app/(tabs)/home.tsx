@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Modal,
   Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native'
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -21,6 +24,8 @@ import { Icono, IconoDocEstado } from '../../lib/iconos'
 import Ionicons from '@expo/vector-icons/Ionicons'
 
 const BANNER_VISTOS_KEY = 'anuncios_banner_vistos'
+const ANCHO_PANTALLA = Dimensions.get('window').width
+const ANCHO_CARRUSEL = ANCHO_PANTALLA - 40
 
 type Moto = {
   id: string
@@ -119,13 +124,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.primario,
   },
+  garajeSeccion: {
+    marginBottom: 24,
+  },
   motoCard: {
     borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,107,26,0.3)',
     minHeight: 180,
+  },
+  motoCardCarrusel: {
+    marginRight: 12,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  dotActivo: {
+    width: 18,
+    backgroundColor: colors.primario,
+  },
+  garajeHint: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.35)',
+    textAlign: 'center',
+    marginTop: 8,
   },
   motoGlowNaranja: {
     position: 'absolute',
@@ -465,6 +498,7 @@ export default function Home() {
   const [bannerVisible, setBannerVisible] = useState(false)
   const [bannerAnuncio, setBannerAnuncio] = useState<Anuncio | null>(null)
   const [ultimoServicio, setUltimoServicio] = useState<RegistroHistorial | null>(null)
+  const [motoIndex, setMotoIndex] = useState(0)
 
   const cargarDatos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -534,6 +568,81 @@ export default function Home() {
     if (dias <= 30) return '#ff4444'
     if (dias <= 60) return colors.primario
     return '#22c55e'
+  }
+
+  function onCarruselScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const indice = Math.round(e.nativeEvent.contentOffset.x / (ANCHO_CARRUSEL + 12))
+    setMotoIndex(indice)
+  }
+
+  function renderTarjetaMoto(moto: Moto, enCarrusel = false) {
+    const diasSoat = diasRestantes(moto.soat_vencimiento)
+    const diasTecno = diasRestantes(moto.tecnicomecanica_vencimiento)
+    return (
+      <TouchableOpacity
+        key={moto.id}
+        activeOpacity={0.9}
+        onPress={() => router.push({ pathname: '/editar-moto', params: { motoId: moto.id } })}
+        style={[
+          styles.motoCard,
+          enCarrusel && { width: ANCHO_CARRUSEL },
+          enCarrusel && styles.motoCardCarrusel,
+        ]}
+      >
+        <LinearGradient
+          colors={['#1a0a00', '#0a0a1a', '#001a1a']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <LinearGradient
+          colors={['rgba(255,107,26,0.25)', 'transparent']}
+          style={styles.motoGlowNaranja}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          pointerEvents="none"
+        />
+        <View style={styles.motoCardBorder} />
+        <View style={styles.motoCardContent}>
+          <View style={styles.motoTop}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.motoCyan}>{moto.marca}</Text>
+              <Text style={styles.motoModelo} numberOfLines={1}>{moto.modelo}</Text>
+            </View>
+            <View style={styles.placaBadge}>
+              <Text style={styles.placaTexto}>{moto.placa}</Text>
+            </View>
+          </View>
+
+          <View style={styles.motoIconoWrap}>
+            <Icono name="speedometer" size={56} color={colors.primario} />
+          </View>
+
+          <View style={styles.motoBottom}>
+            <View style={styles.docRow}>
+              <View style={[styles.docBadge, diasSoat !== null && diasSoat <= 0 && styles.docBadgePeligro, diasSoat !== null && diasSoat > 0 && diasSoat <= 30 && styles.docBadgeWarning]}>
+                <IconoDocEstado dias={diasSoat} />
+                <View>
+                  <Text style={styles.docNombre}>SOAT</Text>
+                  <Text style={[styles.docValor, { color: colorAlerta(diasSoat) }]}>
+                    {diasSoat === null ? 'Sin fecha' : diasSoat <= 0 ? 'Vencido' : `${diasSoat}d`}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.docBadge, diasTecno !== null && diasTecno <= 0 && styles.docBadgePeligro, diasTecno !== null && diasTecno > 0 && diasTecno <= 30 && styles.docBadgeWarning]}>
+                <IconoDocEstado dias={diasTecno} />
+                <View>
+                  <Text style={styles.docNombre}>Tecno</Text>
+                  <Text style={[styles.docValor, { color: colorAlerta(diasTecno) }]}>
+                    {diasTecno === null ? 'Sin fecha' : diasTecno <= 0 ? 'Vencida' : `${diasTecno}d`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    )
   }
 
   function alertasDocumentos() {
@@ -668,67 +777,38 @@ export default function Home() {
               </TouchableOpacity>
             </LinearGradient>
           </View>
+        ) : motos.length === 1 ? (
+          <View style={{ marginBottom: 24 }}>{renderTarjetaMoto(motos[0])}</View>
         ) : (
-          motos.map((moto) => {
-          const diasSoat = diasRestantes(moto.soat_vencimiento)
-          const diasTecno = diasRestantes(moto.tecnicomecanica_vencimiento)
-          return (
-            <View key={moto.id} style={styles.motoCard}>
-              <LinearGradient
-                colors={['#1a0a00', '#0a0a1a', '#001a1a']}
-                style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <LinearGradient
-                colors={['rgba(255,107,26,0.25)', 'transparent']}
-                style={styles.motoGlowNaranja}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                pointerEvents="none"
-              />
-              <View style={styles.motoCardBorder} />
-              <View style={styles.motoCardContent}>
-                <View style={styles.motoTop}>
-                  <View>
-                    <Text style={styles.motoCyan}>{moto.marca}</Text>
-                    <Text style={styles.motoModelo}>{moto.modelo}</Text>
-                  </View>
-                  <View style={styles.placaBadge}>
-                    <Text style={styles.placaTexto}>{moto.placa}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.motoIconoWrap}>
-                  <Icono name="speedometer" size={56} color={colors.primario} />
-                </View>
-
-                <View style={styles.motoBottom}>
-                  <View style={styles.docRow}>
-                    <View style={[styles.docBadge, diasSoat !== null && diasSoat <= 0 && styles.docBadgePeligro, diasSoat !== null && diasSoat > 0 && diasSoat <= 30 && styles.docBadgeWarning]}>
-                      <IconoDocEstado dias={diasSoat} />
-                      <View>
-                        <Text style={styles.docNombre}>SOAT</Text>
-                        <Text style={[styles.docValor, { color: colorAlerta(diasSoat) }]}>
-                          {diasSoat === null ? 'Sin fecha' : diasSoat <= 0 ? 'Vencido' : `${diasSoat}d`}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={[styles.docBadge, diasTecno !== null && diasTecno <= 0 && styles.docBadgePeligro, diasTecno !== null && diasTecno > 0 && diasTecno <= 30 && styles.docBadgeWarning]}>
-                      <IconoDocEstado dias={diasTecno} />
-                      <View>
-                        <Text style={styles.docNombre}>Tecno</Text>
-                        <Text style={[styles.docValor, { color: colorAlerta(diasTecno) }]}>
-                          {diasTecno === null ? 'Sin fecha' : diasTecno <= 0 ? 'Vencida' : `${diasTecno}d`}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
+          <View style={styles.garajeSeccion}>
+            <View style={styles.seccionHeader}>
+              <Text style={styles.seccionTitulo}>Mi garaje · {motos.length} motos</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/garaje')}>
+                <Text style={{ color: colors.primario, fontSize: 12, fontWeight: '600' }}>Ver todo →</Text>
+              </TouchableOpacity>
             </View>
-          )
-          })
+            <ScrollView
+              horizontal
+              pagingEnabled={false}
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToInterval={ANCHO_CARRUSEL + 12}
+              snapToAlignment="start"
+              onMomentumScrollEnd={onCarruselScroll}
+              contentContainerStyle={{ paddingRight: 8 }}
+            >
+              {motos.map((moto) => renderTarjetaMoto(moto, true))}
+            </ScrollView>
+            <View style={styles.dotsRow}>
+              {motos.map((moto, i) => (
+                <View
+                  key={moto.id}
+                  style={[styles.dot, i === motoIndex && styles.dotActivo]}
+                />
+              ))}
+            </View>
+            <Text style={styles.garajeHint}>Desliza para ver tus otras motos</Text>
+          </View>
         )}
 
         {ultimoServicio && (
