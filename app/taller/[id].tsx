@@ -17,7 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors } from '../../lib/colors'
 import { supabase } from '../../lib/supabase'
 import { contarServiciosEnTaller, obtenerTaller } from '../../lib/talleres'
-import type { Taller } from '../../lib/types'
+import { cargarHistorialEnTaller } from '../../lib/historial'
+import type { Taller, RegistroHistorial } from '../../lib/types'
 
 const styles = StyleSheet.create({
   container: {
@@ -175,6 +176,64 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 8,
   },
+  historialTitulo: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.blanco,
+    marginBottom: 12,
+  },
+  historialVacio: {
+    fontSize: 13,
+    color: colors.textoSub,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingVertical: 8,
+  },
+  registroCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.borde,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 16,
+    marginBottom: 10,
+    gap: 8,
+  },
+  registroHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  registroServicio: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.blanco,
+  },
+  registroPlaca: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#000',
+    backgroundColor: '#FFD600',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    overflow: 'hidden',
+  },
+  registroDescripcion: {
+    fontSize: 13,
+    color: colors.textoSub,
+    lineHeight: 18,
+  },
+  registroFooter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  registroMeta: {
+    fontSize: 12,
+    color: colors.textoSub,
+  },
   errorTexto: {
     color: colors.textoSub,
     fontSize: 15,
@@ -185,6 +244,7 @@ export default function TallerDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [taller, setTaller] = useState<Taller | null>(null)
   const [serviciosCount, setServiciosCount] = useState(0)
+  const [registros, setRegistros] = useState<RegistroHistorial[]>([])
 
   const cargarTaller = useCallback(async () => {
     if (!id) return
@@ -202,6 +262,10 @@ export default function TallerDetalle() {
       const motoIds = (motos ?? []).map((m) => m.id)
       const count = await contarServiciosEnTaller(id, motoIds)
       setServiciosCount(count)
+      const historial = await cargarHistorialEnTaller(id, motoIds)
+      setRegistros(historial)
+    } else {
+      setRegistros([])
     }
   }, [id])
 
@@ -298,15 +362,46 @@ export default function TallerDetalle() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={styles.botonSecundario}
-          onPress={() => router.push('/(tabs)/historial')}
-        >
-          <Text style={styles.botonSecundarioTexto}>Ver historial clínico →</Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.historialTitulo}>Historial clínico en este taller</Text>
+          {registros.length === 0 ? (
+            <Text style={styles.historialVacio}>
+              Aún no hay servicios registrados por este taller en tus motos.
+            </Text>
+          ) : (
+            registros.map((item) => (
+              <View key={item.id} style={styles.registroCard}>
+                <View style={styles.registroHeader}>
+                  <Text style={styles.registroServicio}>{item.tipo_servicio}</Text>
+                  {item.moto_placa ? (
+                    <Text style={styles.registroPlaca}>{item.moto_placa}</Text>
+                  ) : null}
+                </View>
+                {item.descripcion ? (
+                  <Text style={styles.registroDescripcion}>{item.descripcion}</Text>
+                ) : null}
+                <View style={styles.registroFooter}>
+                  <Text style={styles.registroMeta}>
+                    {new Date(item.fecha).toLocaleDateString('es-CO')}
+                  </Text>
+                  {item.kilometraje ? (
+                    <Text style={styles.registroMeta}>
+                      {item.kilometraje.toLocaleString('es-CO')} km
+                    </Text>
+                  ) : null}
+                  {item.costo ? (
+                    <Text style={styles.registroMeta}>
+                      ${item.costo.toLocaleString('es-CO')}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            ))
+          )}
+        </View>
 
         <Text style={styles.notaHistorial}>
-          Los servicios que registre este taller aparecerán en tu historial como verificados.
+          Los servicios que registre este taller aparecerán aquí y en tu historial general como verificados.
         </Text>
       </ScrollView>
     </SafeAreaView>

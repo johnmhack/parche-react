@@ -32,4 +32,5 @@ export type RegistroHistorial = {
   taller_id: string | null
   taller_nombre: string | null
   editable: boolean
+  moto_placa?: string | null
 }

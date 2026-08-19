@@ -155,3 +155,34 @@ export async function cargarUltimoServicio(motoIds: string[]): Promise<RegistroH
 
   return elegido
 }
+
+export async function cargarHistorialEnTaller(
+  tallerId: string,
+  motoIds: string[]
+): Promise<RegistroHistorial[]> {
+  if (motoIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('historial_moto')
+    .select('id, moto_id, tipo_servicio, descripcion, kilometraje, costo, fecha, taller_id')
+    .eq('taller_id', tallerId)
+    .in('moto_id', motoIds)
+    .order('fecha', { ascending: false })
+
+  if (error || !data) return []
+
+  const { data: motos } = await supabase
+    .from('motos')
+    .select('id, placa')
+    .in('id', motoIds)
+
+  const placas = new Map((motos ?? []).map((m) => [m.id, m.placa]))
+
+  return data.map((r: HistorialMotoRow) => ({
+    ...r,
+    origen: 'taller' as const,
+    taller_nombre: null,
+    editable: false,
+    moto_placa: placas.get(r.moto_id) ?? null,
+  }))
+}
