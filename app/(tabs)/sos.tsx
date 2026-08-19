@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   FlatList,
-  ScrollView,
 } from 'react-native'
 import * as Location from 'expo-location'
 import { useFocusEffect, router } from 'expo-router'
@@ -16,7 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRecargaEnFoco } from '../../lib/useRecargaEnFoco'
 import { colors } from '../../lib/colors'
 import { Icono } from '../../lib/iconos'
-import { alertaLimiteContactosSos, limitesPlan } from '../../lib/planes'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { alertaLimiteContactosSos, esPremium, limitesPlan } from '../../lib/planes'
 import ModalAlerta, { BotonModalAlerta } from '../../components/ModalAlerta'
 
 type AlertaModal = {
@@ -42,160 +42,257 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 400,
+    height: 350,
+    zIndex: 0,
+  },
+  ambientBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 200,
     zIndex: 0,
   },
   scroll: {
     padding: 20,
     paddingTop: 60,
-    alignItems: 'center',
-  },
-  header: {
-    alignSelf: 'stretch',
-    marginBottom: 32,
+    paddingBottom: 24,
   },
   titulo: {
     fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+    marginBottom: 6,
   },
   tituloAcento: {
-    color: '#ff4444',
+    color: '#ff6b6b',
   },
   subtitulo: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.4)',
-    marginTop: 4,
+    color: colors.textoSub,
     lineHeight: 18,
+    marginBottom: 20,
   },
-  // Botón SOS
+  resumenCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  resumenGradient: {
+    padding: 18,
+    gap: 12,
+  },
+  resumenTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resumenInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  resumenTitulo: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  resumenSub: {
+    fontSize: 12,
+    color: colors.textoSub,
+  },
+  planBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  planBadgeFree: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  planBadgePremium: {
+    backgroundColor: 'rgba(100,228,188,0.08)',
+    borderColor: 'rgba(100,228,188,0.25)',
+  },
+  planBadgeTexto: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  planBadgeTextoFree: {
+    color: 'rgba(255,255,255,0.6)',
+  },
+  planBadgeTextoPremium: {
+    color: colors.secundario,
+  },
+  progresoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progresoLabel: {
+    fontSize: 12,
+    color: colors.textoSub,
+  },
+  progresoValor: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  progresoBar: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    marginTop: 6,
+  },
+  progresoFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  cooldownBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,107,107,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,0.2)',
+    borderRadius: 12,
+    padding: 10,
+  },
+  cooldownTexto: {
+    flex: 1,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
+    lineHeight: 17,
+  },
   sosWrap: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 28,
   },
   sosRingOuter: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 196,
+    height: 196,
+    borderRadius: 98,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,68,68,0.2)',
-    backgroundColor: 'rgba(255,68,68,0.04)',
+    borderColor: 'rgba(255,107,107,0.2)',
+    backgroundColor: 'rgba(255,107,107,0.04)',
   },
   sosRingInner: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
+    width: 168,
+    height: 168,
+    borderRadius: 84,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,68,68,0.3)',
-    backgroundColor: 'rgba(255,68,68,0.06)',
+    borderColor: 'rgba(255,107,107,0.28)',
+    backgroundColor: 'rgba(255,107,107,0.06)',
   },
   botonSOS: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 136,
+    height: 136,
+    borderRadius: 68,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#ff4444',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
   botonSOSDesactivado: {
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
   },
   botonSOSTexto: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: 2,
+    letterSpacing: 1,
     textAlign: 'center',
   },
   botonSOSSubtexto: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.75)',
     fontSize: 11,
     marginTop: 4,
     textAlign: 'center',
   },
-  // Sección contactos
-  seccion: {
-    width: '100%',
+  seccionTitulo: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    marginLeft: 4,
   },
   seccionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
-  },
-  seccionTitulo: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.9)',
-    letterSpacing: 0.5,
+    marginBottom: 12,
   },
   agregarBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(37,255,122,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: colors.borde,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  agregarTexto: {
-    color: colors.primario,
-    fontSize: 12,
-    fontWeight: '700',
+    paddingVertical: 6,
   },
   agregarBtnDisabled: {
     opacity: 0.45,
+  },
+  agregarTexto: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    fontWeight: '700',
   },
   limiteTexto: {
     fontSize: 12,
     color: colors.textoSub,
     fontWeight: '600',
   },
-  vacio: {
-    color: 'rgba(255,255,255,0.3)',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 24,
-  },
-  // Contacto
   contacto: {
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   contactoGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
+    gap: 12,
   },
   contactoAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,68,68,0.3)',
-    backgroundColor: 'rgba(255,68,68,0.1)',
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   contactoAvatarTexto: {
-    color: '#ff4444',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
+  },
+  contactoInfo: {
+    flex: 1,
+    gap: 2,
   },
   contactoNombre: {
     color: '#FFFFFF',
@@ -203,22 +300,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   contactoTelefono: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textoSub,
     fontSize: 13,
-    marginTop: 2,
   },
   eliminarBtn: {
-    backgroundColor: 'rgba(255,68,68,0.08)',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,107,107,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,68,68,0.2)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    borderColor: 'rgba(255,107,107,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  eliminarTexto: {
-    color: '#ff4444',
-    fontSize: 12,
+  vacioCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  vacioGradient: {
+    padding: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  vacioTitulo: {
+    fontSize: 15,
     fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  vacioSub: {
+    fontSize: 12,
+    color: colors.textoSub,
+    textAlign: 'center',
+    lineHeight: 17,
+  },
+  cargandoWrap: {
+    paddingVertical: 24,
+    alignItems: 'center',
   },
 })
 
@@ -226,12 +345,10 @@ export default function SOS() {
   const [contactos, setContactos] = useState<Contacto[]>([])
   const [plan, setPlan] = useState('free')
   const [enviando, setEnviando] = useState(false)
-  const [progreso, setProgreso] = useState(0)
   const [enCooldown, setEnCooldown] = useState(false)
   const [minutosRestantes, setMinutosRestantes] = useState(0)
   const [alertaModal, setAlertaModal] = useState<AlertaModal | null>(null)
-  const intervalRef = useRef<any>(null)
-  const progresoRef = useRef<any>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const cargarContactos = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -251,14 +368,21 @@ export default function SOS() {
   useFocusEffect(
     useCallback(() => {
       verificarCooldown()
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+      }
     }, [])
   )
 
   async function verificarCooldown() {
     const ultimoSOS = await AsyncStorage.getItem('ultimo_sos')
-    if (!ultimoSOS) return
+    if (!ultimoSOS) {
+      setEnCooldown(false)
+      setMinutosRestantes(0)
+      return
+    }
 
-    const diff = Date.now() - parseInt(ultimoSOS)
+    const diff = Date.now() - parseInt(ultimoSOS, 10)
     const treintaMinutos = 30 * 60 * 1000
 
     if (diff < treintaMinutos) {
@@ -266,16 +390,20 @@ export default function SOS() {
       setEnCooldown(true)
       setMinutosRestantes(restante)
 
-      intervalRef.current = setInterval(async () => {
-        const diff2 = Date.now() - parseInt(ultimoSOS)
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        const diff2 = Date.now() - parseInt(ultimoSOS, 10)
         if (diff2 >= treintaMinutos) {
           setEnCooldown(false)
           setMinutosRestantes(0)
-          clearInterval(intervalRef.current)
+          if (intervalRef.current) clearInterval(intervalRef.current)
         } else {
           setMinutosRestantes(Math.ceil((treintaMinutos - diff2) / 60000))
         }
       }, 60000)
+    } else {
+      setEnCooldown(false)
+      setMinutosRestantes(0)
     }
   }
 
@@ -310,7 +438,10 @@ export default function SOS() {
 
     const location = await Location.getCurrentPositionAsync({})
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setEnviando(false)
+      return
+    }
 
     const { error } = await supabase.from('mensajes_sos').insert({
       usuario_id: user.id,
@@ -361,8 +492,117 @@ export default function SOS() {
     })
   }
 
-  const limiteContactos = limitesPlan(plan).contactosSos
-  const enLimiteContactos = contactos.length >= limiteContactos
+  const limites = limitesPlan(plan)
+  const premium = esPremium(plan)
+  const enLimiteContactos = contactos.length >= limites.contactosSos
+  const pctContactos = Math.min(100, (contactos.length / limites.contactosSos) * 100)
+
+  const header = (
+    <>
+      <Text style={styles.titulo}>
+        Ayuda en <Text style={styles.tituloAcento}>ruta</Text>
+      </Text>
+      <Text style={styles.subtitulo}>
+        Mantén presionado 3 segundos para enviar tu ubicación GPS a tus contactos.
+      </Text>
+
+      <View style={styles.resumenCard}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+          style={styles.resumenGradient}
+        >
+          <View style={styles.resumenTop}>
+            <View style={styles.resumenInfo}>
+              <Text style={styles.resumenTitulo}>
+                {contactos.length === 0 ? 'Sin contactos SOS' : `${contactos.length} contacto${contactos.length > 1 ? 's' : ''} activo${contactos.length > 1 ? 's' : ''}`}
+              </Text>
+              <Text style={styles.resumenSub}>
+                {premium ? 'Hasta 5 contactos en Premium' : 'Hasta 1 contacto en Free'}
+              </Text>
+            </View>
+            <View style={[styles.planBadge, premium ? styles.planBadgePremium : styles.planBadgeFree]}>
+              <Ionicons
+                name={premium ? 'diamond' : 'person-outline'}
+                size={14}
+                color={premium ? colors.secundario : 'rgba(255,255,255,0.6)'}
+              />
+              <Text style={[styles.planBadgeTexto, premium ? styles.planBadgeTextoPremium : styles.planBadgeTextoFree]}>
+                {premium ? 'Premium' : 'Free'}
+              </Text>
+            </View>
+          </View>
+          <View>
+            <View style={styles.progresoHeader}>
+              <Text style={styles.progresoLabel}>Espacio del plan</Text>
+              <Text style={styles.progresoValor}>{contactos.length} / {limites.contactosSos}</Text>
+            </View>
+            <View style={styles.progresoBar}>
+              <View style={[styles.progresoFill, {
+                width: `${pctContactos}%`,
+                backgroundColor: enLimiteContactos ? '#ff6b6b' : colors.secundario,
+              }]} />
+            </View>
+          </View>
+          {enCooldown && (
+            <View style={styles.cooldownBanner}>
+              <Ionicons name="time-outline" size={18} color="#ff6b6b" />
+              <Text style={styles.cooldownTexto}>
+                Botón en pausa · podrás volver a pedir ayuda en {minutosRestantes} min
+              </Text>
+            </View>
+          )}
+        </LinearGradient>
+      </View>
+
+      <View style={styles.sosWrap}>
+        <View style={styles.sosRingOuter}>
+          <View style={styles.sosRingInner}>
+            <TouchableOpacity
+              onLongPress={enCooldown ? undefined : handleSOS}
+              delayLongPress={3000}
+              disabled={enviando || enCooldown}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={enviando || enCooldown ? ['#5a1a1a', '#3a0a0a'] : ['#ff4444', '#cc0000']}
+                style={[styles.botonSOS, (enviando || enCooldown) && styles.botonSOSDesactivado]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                {enviando ? (
+                  <ActivityIndicator color="#fff" size="large" />
+                ) : enCooldown ? (
+                  <>
+                    <Icono name="lock-closed" size={28} color="#fff" />
+                    <Text style={styles.botonSOSSubtexto}>{minutosRestantes} min</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.botonSOSTexto}>PEDIR{'\n'}AYUDA</Text>
+                    <Text style={styles.botonSOSSubtexto}>Mantén 3 seg</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.seccionHeader}>
+        <Text style={styles.seccionTitulo}>Contactos de emergencia</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Text style={styles.limiteTexto}>{contactos.length} / {limites.contactosSos}</Text>
+          <TouchableOpacity
+            style={[styles.agregarBtn, enLimiteContactos && styles.agregarBtnDisabled]}
+            onPress={agregarContacto}
+          >
+            <Ionicons name="add" size={14} color="rgba(255,255,255,0.75)" />
+            <Text style={styles.agregarTexto}>Agregar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </>
+  )
 
   return (
     <View style={styles.container}>
@@ -375,111 +615,66 @@ export default function SOS() {
         onCerrar={() => setAlertaModal(null)}
       />
       <LinearGradient
-        colors={['rgba(255,68,68,0.06)', 'transparent']}
+        colors={['rgba(255,107,107,0.05)', 'transparent']}
         style={styles.ambientTop}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         pointerEvents="none"
       />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.02)', 'transparent']}
+        style={styles.ambientBottom}
+        pointerEvents="none"
+      />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-        <View style={styles.header}>
-          <Text style={styles.titulo}>
-            Ayuda en <Text style={styles.tituloAcento}>ruta</Text>
-          </Text>
-          <Text style={styles.subtitulo}>
-            Mantén presionado 3 segundos para enviar tu ubicación GPS a tus contactos.
-          </Text>
-        </View>
-
-        {/* Botón SOS */}
-        <View style={styles.sosWrap}>
-          <View style={styles.sosRingOuter}>
-            <View style={styles.sosRingInner}>
-              <TouchableOpacity
-                onLongPress={enCooldown ? undefined : handleSOS}
-                delayLongPress={3000}
-                disabled={enviando || enCooldown}
-              >
-                <LinearGradient
-                  colors={enviando || enCooldown ? ['#5a1a1a', '#3a0a0a'] : ['#ff4444', '#cc0000']}
-                  style={[styles.botonSOS, (enviando || enCooldown) && styles.botonSOSDesactivado]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  {enviando ? (
-                    <ActivityIndicator color="#fff" size="large" />
-                  ) : enCooldown ? (
-                    <>
-                      <Icono name="lock-closed" size={28} color="#fff" />
-                      <Text style={styles.botonSOSSubtexto}>{minutosRestantes} min</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.botonSOSTexto}>PEDIR{'\n'}AYUDA</Text>
-                      <Text style={styles.botonSOSSubtexto}>Mantén 3 seg</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
+      <FlatList
+        data={contactos}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          cargando ? (
+            <View style={styles.cargandoWrap}>
+              <ActivityIndicator color={colors.secundario} />
             </View>
-          </View>
-        </View>
-
-        {/* Contactos */}
-        <View style={styles.seccion}>
-          <View style={styles.seccionHeader}>
-            <Text style={styles.seccionTitulo}>Contactos de emergencia</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Text style={styles.limiteTexto}>
-                {contactos.length} / {limiteContactos}
-              </Text>
-              <TouchableOpacity
-                style={[styles.agregarBtn, enLimiteContactos && styles.agregarBtnDisabled]}
-                onPress={agregarContacto}
-              >
-                <Text style={styles.agregarTexto}>+ Agregar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {cargando ? (
-            <ActivityIndicator color={colors.primario} />
-          ) : contactos.length === 0 ? (
-            <Text style={styles.vacio}>No tienes contactos de emergencia</Text>
           ) : (
-            <FlatList
-              data={contactos}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              renderItem={({ item }) => (
-                <View style={styles.contacto}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.02)']}
-                    style={styles.contactoGradient}
-                  >
-                    <View style={styles.contactoAvatar}>
-                      <Text style={styles.contactoAvatarTexto}>
-                        {item.nombre.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.contactoNombre}>{item.nombre}</Text>
-                      <Text style={styles.contactoTelefono}>{item.telefono}</Text>
-                    </View>
-                    <TouchableOpacity style={styles.eliminarBtn} onPress={() => eliminarContacto(item.id)}>
-                      <Text style={styles.eliminarTexto}>Eliminar</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                </View>
-              )}
-            />
-          )}
-        </View>
-
-        <View style={{ height: 20 }} />
-      </ScrollView>
+            <View style={styles.vacioCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+                style={styles.vacioGradient}
+              >
+                <Ionicons name="people-outline" size={28} color={colors.textoSub} />
+                <Text style={styles.vacioTitulo}>Sin contactos de emergencia</Text>
+                <Text style={styles.vacioSub}>
+                  Agrega a alguien de confianza para recibir tu ubicación si necesitas ayuda en ruta.
+                </Text>
+              </LinearGradient>
+            </View>
+          )
+        }
+        renderItem={({ item }) => (
+          <View style={styles.contacto}>
+            <LinearGradient
+              colors={['#12182a', '#0d1118']}
+              style={styles.contactoGradient}
+            >
+              <View style={styles.contactoAvatar}>
+                <Text style={styles.contactoAvatarTexto}>
+                  {item.nombre.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.contactoInfo}>
+                <Text style={styles.contactoNombre}>{item.nombre}</Text>
+                <Text style={styles.contactoTelefono}>{item.telefono}</Text>
+              </View>
+              <TouchableOpacity style={styles.eliminarBtn} onPress={() => eliminarContacto(item.id)}>
+                <Ionicons name="trash-outline" size={16} color="#ff6b6b" />
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        )}
+      />
     </View>
   )
 }
