@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '../lib/supabase'
 import { colors } from '../lib/colors'
 import { borrarCache } from '../lib/carga'
+import { generarCodigoParche } from '../lib/codigoParche'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import SelectorFecha from '../components/SelectorFecha'
 
@@ -191,6 +192,7 @@ export default function AgregarMoto() {
     const { error } = await supabase.from('motos').insert({
       dueno_id: user.id,
       placa: placaLimpia,
+      codigo_parche: generarCodigoParche(6),
       marca: marca.trim(),
       modelo: modelo.trim(),
       anio: anioNum,

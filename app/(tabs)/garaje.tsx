@@ -205,6 +205,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
+  qrBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(37,255,122,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(37,255,122,0.35)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  qrBtnTexto: {
+    color: colors.primario,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   editarTexto: {
     color: 'rgba(255,255,255,0.65)',
     fontSize: 12,
@@ -422,9 +438,22 @@ export default function Garaje() {
               <View style={styles.placaWrap}>
                 <Text style={styles.placaTexto}>{item.placa}</Text>
               </View>
-              <View style={styles.editarBtn}>
-                <Text style={styles.editarTexto}>Editar</Text>
-                <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.45)" />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TouchableOpacity
+                  style={styles.qrBtn}
+                  onPress={(e) => {
+                    e.stopPropagation?.()
+                    router.push({ pathname: '/moto-codigo', params: { motoId: item.id } })
+                  }}
+                  hitSlop={8}
+                >
+                  <Ionicons name="qr-code-outline" size={18} color={colors.primario} />
+                  <Text style={styles.qrBtnTexto}>QR</Text>
+                </TouchableOpacity>
+                <View style={styles.editarBtn}>
+                  <Text style={styles.editarTexto}>Editar</Text>
+                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.45)" />
+                </View>
               </View>
             </View>
 

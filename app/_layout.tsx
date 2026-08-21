@@ -7,6 +7,7 @@ export default function Layout() {
       <Stack.Screen name="registro" />
       <Stack.Screen name="agregar-moto" />
       <Stack.Screen name="editar-moto" />
+      <Stack.Screen name="moto-codigo" />
       <Stack.Screen name="agregar-historial" />
       <Stack.Screen name="editar-historial" />
       <Stack.Screen name="agregar-contacto-sos" />
